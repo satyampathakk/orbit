@@ -1,0 +1,82 @@
+{
+  "company": {
+    "name": "Orbit Power",
+    "description": "At Orbit Power, our vision is to be the best-in-class service provider to transmission utilities while ensuring high operational standards and employee growth. We deliver integrated utility solutions with a commitment to ethics, integrity, and transparency.",
+    "founded": "2009",
+    "employees": "150+",
+    "projects": "500+",
+    "statesCovered": "5",
+    "clientRetention": "98%",
+    "license": "A-Class Electrical License",
+    "location": "Hazratganj, Lucknow",
+    "mission": "To deliver innovative electrical engineering solutions that power progress, enhance safety, and contribute to a sustainable future. We are committed to exceeding client expectations through technical excellence, creative problem-solving, and unwavering dedication to quality.",
+    "values": [
+      "Ethics and Integrity in all our operations",
+      "Transparency with our clients and stakeholders",
+      "Customer Care as our primary focus",
+      "Continual Improvement in our processes",
+      "Timely Delivery of all our commitments",
+      "Strong Client Relationships"
+    ],
+    "contact": {
+      "address": "45, Hazratganj, Lucknow, Uttar Pradesh - 226001, India",
+      "phone": "+91 98765 43210",
+      "email": "info@orbitpower.com",
+      "altContact": {
+        "address": "gomtinagar, lucknow, uttarpradesh, india",
+        "phone": "+91 8115108051",
+        "email": "orbitenginer@gmail.com"
+      }
+    }
+  },
+  "team": [
+    {
+      "id": 1,
+      "name": "Rajesh Kumar",
+      "position": "Chief Executive Officer",
+      "bio": "Over 20 years of experience in electrical engineering and utility management with a focus on operational excellence.",
+      "expertise": [
+        "Strategic Leadership",
+        "Project Management",
+        "Business Development"
+      ],
+      "avatar": "/images/team/rajesh-kumar.jpg"
+    },
+    {
+      "id": 2,
+      "name": "Priya Khanna",
+      "position": "Chief Technology Officer",
+      "bio": "Expert in advanced electrical systems and technology integration with a background in smart grid solutions.",
+      "expertise": [
+        "Technology Innovation",
+        "System Integration",
+        "R&D"
+      ],
+      "avatar": "/images/team/priya-khanna.jpg"
+    },
+    {
+      "id": 3,
+      "name": "Amit Singh",
+      "position": "Chief Operations Officer",
+      "bio": "Operations expert with extensive experience in managing large-scale electrical infrastructure projects PAN-India.",
+      "expertise": [
+        "Operations Management",
+        "Quality Assurance",
+        "Process Optimization"
+      ],
+      "avatar": "/images/team/amit-singh.jpg"
+    },
+    {
+      "id": 4,
+      "name": "Neha Sharma",
+      "position": "Head of Engineering",
+      "bio": "Lead electrical engineer with expertise in transmission and distribution systems and safety compliance.",
+      "expertise": [
+        "Electrical Engineering",
+        "Safety Compliance",
+        "Design Excellence"
+      ],
+      "avatar": "/images/team/neha-sharma.jpg"
+    }
+  ]
+}

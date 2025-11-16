@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Careers - Orbit Power</title>
+    <meta name="description" content="Join Orbit Power's team. Explore career opportunities in electrical and utility services.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <h2>ORBIT POWER</h2>
+            </div>
+            <div class="nav-menu" id="nav-menu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="index.html#services" class="nav-link">Services</a>
+                <a href="index.html#gallery" class="nav-link">Photo Gallery</a>
+                <a href="index.html#clients" class="nav-link">Clients</a>
+                <a href="index.html#testimonials" class="nav-link">Testimonials</a>
+                <a href="index.html#about" class="nav-link">About Us</a>
+                <a href="careers.html" class="nav-link active">Careers</a>
+                <a href="index.html#contact" class="nav-link">Contact</a>
+            </div>
+            <div class="hamburger" id="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1>Build Your Career with Orbit Power</h1>
+                <p>Join our team of professionals dedicated to delivering excellence in electrical and utility services. We offer growth-oriented culture, learning environment, and opportunities to contribute to India's utility sector.</p>
+                <div class="hero-cta">
+                    <a href="#openings" class="btn btn-primary">View Openings</a>
+                    <a href="#application" class="btn btn-secondary">Apply Now</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Career Intro Section -->
+    <section class="careers-intro">
+        <div class="container">
+            <h2>Why Work With Us?</h2>
+            <div class="career-info">
+                <p>At Orbit Power, we foster a learning environment that promotes professional growth and development. Our culture emphasizes:</p>
+                <ul>
+                    <li><i class="fas fa-check"></i> A learning culture that encourages continuous skill development</li>
+                    <li><i class="fas fa-check"></i> Opportunities to work on cutting-edge utility projects PAN-India</li>
+                    <li><i class="fas fa-check"></i> Competitive compensation and benefits</li>
+                    <li><i class="fas fa-check"></i> Collaborative environment with cross-functional teams</li>
+                    <li><i class="fas fa-check"></i> Opportunities for leadership and career advancement</li>
+                    <li><i class="fas fa-check"></i> Recognition and merit-based growth opportunities</li>
+                    <li><i class="fas fa-check"></i> Work-life balance with flexible working arrangements</li>
+                </ul>
+                <p>We believe in investing in our employees as they are the cornerstone of our success in delivering high-quality utility services. Our commitment to ethics, integrity, and transparency extends to our workplace culture as well.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Job Openings -->
+    <section id="openings" class="openings">
+        <div class="container">
+            <h2>Current Openings</h2>
+            <div class="openings-container" id="openings-container">
+                <p>Loading job openings...</p>
+                <!-- Jobs will be loaded via JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Application Form -->
+    <section id="application" class="application">
+        <div class="container">
+            <h2>Apply For A Position</h2>
+            <div class="application-container">
+                <form id="career-application-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" id="firstName" name="firstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" id="lastName" name="lastName" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" name="phone" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="position">Position Applying For</label>
+                            <select id="position" name="position" required>
+                                <option value="">Select a position</option>
+                                <option value="senior-electrical-engineer">Senior Electrical Engineer</option>
+                                <option value="system-integration-specialist">System Integration Specialist</option>
+                                <option value="field-service-engineer">Field Service Engineer</option>
+                                <option value="safety-compliance-officer">Safety Compliance Officer</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="experience">Years of Experience</label>
+                            <select id="experience" name="experience" required>
+                                <option value="">Select experience level</option>
+                                <option value="0-1">0-1 years</option>
+                                <option value="2-3">2-3 years</option>
+                                <option value="4-5">4-5 years</option>
+                                <option value="6-10">6-10 years</option>
+                                <option value="10+">10+ years</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="resume">Upload Resume</label>
+                        <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="coverLetter">Cover Letter</label>
+                        <textarea id="coverLetter" name="coverLetter" placeholder="Tell us why you're interested in joining Orbit Power..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="message">Additional Information</label>
+                        <textarea id="message" name="message" placeholder="Any additional information you'd like to share..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Submit Application</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-main">
+            <div class="footer-container">
+                <!-- LEFT SECTION: Company Info -->
+                <div class="footer-left">
+                    <h3 class="footer-title">Orbit Engineering</h3>
+                    <p class="footer-description">
+                        Empowering innovation through technology. We build scalable, secure, and future-ready digital solutions that transform businesses and accelerate growth.
+                    </p>
+                    <!-- Social Icons -->
+                    <div class="social-icons">
+                        <a href="#" class="social-icon">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="social-icon">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="social-icon">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        <a href="#" class="social-icon">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- RIGHT SECTION: Contact Info + Map Side by Side -->
+                <div class="footer-right">
+                    <div class="footer-contact-map-container">
+                        <!-- Contact Info -->
+                        <div class="footer-contact">
+                            <h4 class="footer-contact-title">Contact Us</h4>
+                            <div class="footer-contact-item">
+                                <i class="fas fa-map-marker-alt footer-contact-icon"></i>
+                                <span class="footer-contact-text">Gomtinagar, Lucknow, Uttar Pradesh, India</span>
+                            </div>
+                            <div class="footer-contact-item">
+                                <i class="fas fa-phone-alt footer-contact-icon"></i>
+                                <span class="footer-contact-text">+91 8115108051</span>
+                            </div>
+                            <div class="footer-contact-item">
+                                <i class="fas fa-envelope footer-contact-icon"></i>
+                                <span class="footer-contact-text">orbitenginer@gmail.com</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Map Box -->
+                        <div class="map-container">
+                            <iframe title="Company Map - Gomtinagar, Lucknow" 
+                                src="https://maps.google.com/maps?q=Gomtinagar%20Lucknow%20Uttar%20Pradesh%20India&t=&z=13&ie=UTF8&iwloc=&output=embed" 
+                                width="100%" 
+                                height="100%" 
+                                style="border: 0" 
+                                allowfullscreen="" 
+                                loading="lazy" 
+                                referrerpolicy="no-referrer-when-downgrade">
+                            </iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Divider -->
+        <div class="footer-divider"></div>
+        
+        <!-- Bottom Bar -->
+        <div class="footer-bottom-bar">
+            <p>&copy; 2025 | Orbit Engineering | All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        // Initialize careers page specific functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load jobs when on careers page
+            if (document.querySelector('.openings-container')) {
+                loadJobs();
+            }
+            
+            // Initialize existing functionality
+            initializeNavigation();
+            
+            // Form submission handling
+            const form = document.getElementById('career-application-form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Get form values
+                    const firstName = document.getElementById('firstName').value;
+                    const lastName = document.getElementById('lastName').value;
+                    const email = document.getElementById('email').value;
+                    const phone = document.getElementById('phone').value;
+                    const position = document.getElementById('position').value;
+                    
+                    // Basic validation
+                    if (firstName && lastName && email && phone && position) {
+                        // In a real application, you would send this data to a server
+                        alert('Thank you for your application! Our HR team will contact you shortly.');
+                        form.reset();
+                    } else {
+                        alert('Please fill in all required fields.');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

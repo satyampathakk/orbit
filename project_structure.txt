@@ -1,0 +1,19 @@
+F:\orbit_try_1\orbit-website\
+├── index.html (updated main page)
+├── careers.html (updated careers page)
+├── admin.html (new admin interface)
+├── data/
+│   ├── services.json
+│   ├── gallery.json
+│   ├── jobs.json
+│   └── company.json
+├── images/
+│   ├── services/
+│   ├── gallery/
+│   └── team/
+├── js/
+│   ├── main.js
+│   └── admin.js
+└── css/
+    ├── styles.css
+    └── admin.css

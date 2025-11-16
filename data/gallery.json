@@ -1,0 +1,74 @@
+{
+  "gallery": [
+    {
+      "id": 1,
+      "title": "High Voltage Substation",
+      "description": "400kV GIS Installation",
+      "image": "/images/gallery/1763298072211-430111674.jpg",
+      "category": "gallery"
+    },
+    {
+      "id": 2,
+      "title": "Transmission Line",
+      "description": "220kV Overhead Lines",
+      "image": "/images/gallery/1763298086981-912315162.jpg",
+      "category": "gallery"
+    },
+    {
+      "id": 3,
+      "title": "Field Installation",
+      "description": "High Voltage Equipment",
+      "image": "/images/gallery/1763298098162-271406103.jpg",
+      "category": "gallery"
+    },
+    {
+      "id": 4,
+      "title": "Control Room",
+      "description": "Smart Grid Infrastructure",
+      "image": "/images/gallery/1763298116044-532042461.webp",
+      "category": "gallery"
+    },
+    {
+      "id": 5,
+      "title": "Engineering Design",
+      "description": "Substation Planning",
+      "image": "/images/gallery/1763298130449-425997457.jpg",
+      "category": "gallery"
+    },
+    {
+      "id": 6,
+      "title": "Electrical Equipment",
+      "description": "Transformer Installation",
+      "image": "/images/gallery/1763298145232-951016762.jpg",
+      "category": "gallery"
+    },
+    {
+      "id": 7,
+      "title": "Circuit Breaker",
+      "description": "Medium Voltage Equipment",
+      "image": "/images/gallery/1763298161886-101735236.webp",
+      "category": "gallery"
+    },
+    {
+      "id": 8,
+      "title": "Power Transmission",
+      "description": "Overhead Power Lines",
+      "image": "/images/gallery/1763298173794-820500310.jpg",
+      "category": "gallery"
+    },
+    {
+      "id": 9,
+      "title": "Engineering Team",
+      "description": "Project Implementation",
+      "image": "/images/gallery/1763298195281-6596810.jpg",
+      "category": "gallery"
+    },
+    {
+      "id": 10,
+      "title": "Switchgear Installation",
+      "description": "Low Voltage Systems",
+      "image": "/images/gallery/1763298206669-524990129.jpg",
+      "category": "gallery"
+    }
+  ]
+}

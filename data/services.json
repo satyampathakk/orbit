@@ -1,0 +1,60 @@
+{
+  "services": [
+    {
+      "id": 1,
+      "title": "Transmission & Distribution",
+      "description": "Complete T&D solutions from design to commissioning with A-Class electrical license compliance and high operational standards.",
+      "image": "/images/services/1763297914513-440667624.webp",
+      "icon": "fas fa-bolt"
+    },
+    {
+      "id": 2,
+      "title": "Managed Services",
+      "description": "Comprehensive O&M services ensuring optimal performance, reliability, and minimal downtime for your electrical infrastructure.",
+      "image": "/images/services/1763297932985-165087132.jpg",
+      "icon": "fas fa-cogs"
+    },
+    {
+      "id": 3,
+      "title": "Utility-as-a-Service",
+      "description": "Complete utility solutions as a service, reducing your capital expenditure while ensuring reliable power delivery.",
+      "image": "/images/services/1763297947350-524750803.webp",
+      "icon": "fas fa-cloud"
+    },
+    {
+      "id": 4,
+      "title": "System Integration",
+      "description": "End-to-end system integration services ensuring seamless operations across all your electrical and utility systems.",
+      "image": "/images/services/1763297967254-188566735.webp",
+      "icon": "fas fa-project-diagram"
+    },
+    {
+      "id": 5,
+      "title": "Consulting",
+      "description": "Expert consultation for utility planning, compliance, and optimization strategies tailored to your specific needs.",
+      "image": "/images/services/1763297981558-216268568.jpg",
+      "icon": "fas fa-lightbulb"
+    },
+    {
+      "id": 6,
+      "title": "Electrical Safety",
+      "description": "Comprehensive safety protocols and compliance solutions for electrical installations and operations.",
+      "image": "/images/services/1763297996753-283841889.webp",
+      "icon": "fas fa-shield-alt"
+    },
+    {
+      "id": 7,
+      "title": "Maintenance",
+      "description": "Preventive and corrective maintenance services to ensure optimal performance and longevity.",
+      "image": "/images/services/1763298044999-655398744.webp",
+      "icon": "fas fa-tools"
+    },
+    {
+      "id": 8,
+      "title": "Energy Audits",
+      "description": "Comprehensive energy assessments to optimize efficiency and reduce operational costs.",
+      "image": "/images/services/1763298010654-769006194.jpg",
+      "icon": "fas fa-chart-line"
+    }
+  ]
+}

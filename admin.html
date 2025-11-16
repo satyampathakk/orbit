@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbit Power - Admin Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1><i class="fas fa-cog"></i> Orbit Power Admin Panel</h1>
+        </header>
+        
+        <nav class="admin-nav">
+            <button class="nav-btn active" data-section="dashboard">Dashboard</button>
+            <button class="nav-btn" data-section="services">Services</button>
+            <button class="nav-btn" data-section="gallery">Gallery</button>
+            <button class="nav-btn" data-section="jobs">Jobs</button>
+            <button class="nav-btn" data-section="company">Company Info</button>
+        </nav>
+        
+        <main class="admin-main">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="admin-section active">
+                <h2>Dashboard</h2>
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <i class="fas fa-concierge-bell"></i>
+                        <h3 id="services-count">8</h3>
+                        <p>Services</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-images"></i>
+                        <h3 id="gallery-count">10</h3>
+                        <p>Gallery Items</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-briefcase"></i>
+                        <h3 id="jobs-count">4</h3>
+                        <p>Job Openings</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-users"></i>
+                        <h3 id="team-count">4</h3>
+                        <p>Team Members</p>
+                    </div>
+                </div>
+                <div class="quick-actions">
+                    <h3>Quick Actions</h3>
+                    <div class="actions-grid">
+                        <button class="action-btn" data-action="add-service">
+                            <i class="fas fa-plus-circle"></i> Add Service
+                        </button>
+                        <button class="action-btn" data-action="add-gallery">
+                            <i class="fas fa-plus-circle"></i> Add Gallery Item
+                        </button>
+                        <button class="action-btn" data-action="add-job">
+                            <i class="fas fa-plus-circle"></i> Add Job Opening
+                        </button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Services Section -->
+            <section id="services" class="admin-section">
+                <h2>Manage Services</h2>
+                <button id="add-service-btn" class="btn-primary"><i class="fas fa-plus"></i> Add New Service</button>
+                
+                <div class="content-list" id="services-list">
+                    <!-- Services will be loaded here -->
+                </div>
+            </section>
+            
+            <!-- Gallery Section -->
+            <section id="gallery" class="admin-section">
+                <h2>Manage Gallery</h2>
+                <button id="add-gallery-btn" class="btn-primary"><i class="fas fa-plus"></i> Add New Gallery Item</button>
+                
+                <div class="content-list" id="gallery-list">
+                    <!-- Gallery items will be loaded here -->
+                </div>
+            </section>
+            
+            <!-- Jobs Section -->
+            <section id="jobs" class="admin-section">
+                <h2>Manage Jobs</h2>
+                <button id="add-job-btn" class="btn-primary"><i class="fas fa-plus"></i> Add New Job</button>
+                
+                <div class="content-list" id="jobs-list">
+                    <!-- Jobs will be loaded here -->
+                </div>
+            </section>
+            
+            <!-- Company Section -->
+            <section id="company" class="admin-section">
+                <h2>Company Information</h2>
+                <form id="company-form">
+                    <div class="form-group">
+                        <label for="company-name">Company Name</label>
+                        <input type="text" id="company-name" name="name">
+                    </div>
+                    <div class="form-group">
+                        <label for="company-description">Description</label>
+                        <textarea id="company-description" name="description" rows="4"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="founded">Founded</label>
+                            <input type="text" id="founded" name="founded">
+                        </div>
+                        <div class="form-group">
+                            <label for="employees">Employees</label>
+                            <input type="text" id="employees" name="employees">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="projects">Projects Completed</label>
+                            <input type="text" id="projects" name="projects">
+                        </div>
+                        <div class="form-group">
+                            <label for="states-covered">States Covered</label>
+                            <input type="text" id="states-covered" name="statesCovered">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="mission">Mission Statement</label>
+                        <textarea id="mission" name="mission" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="values">Values (separate with commas)</label>
+                        <textarea id="values" name="values" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+                </form>
+            </section>
+        </main>
+    </div>
+    
+    <!-- Modal for adding/editing content -->
+    <div id="content-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title">Add New Item</h2>
+            <form id="content-form">
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="4" required></textarea>
+                </div>
+                
+                <!-- Image Upload -->
+                <div class="form-group">
+                    <label for="image-upload">Upload Image</label>
+                    <input type="file" id="image-upload" name="image" accept="image/*">
+                    <div id="image-preview" class="image-preview"></div>
+                </div>
+                
+                <!-- This will show the uploaded image path -->
+                <div class="form-group" id="image-path-group" style="display: none;">
+                    <label for="image-path">Image Path</label>
+                    <input type="text" id="image-path" name="image" readonly>
+                </div>
+                
+                <div class="form-group" id="location-group" style="display: none;">
+                    <label for="location">Location</label>
+                    <input type="text" id="location" name="location">
+                </div>
+                <div class="form-group" id="type-group" style="display: none;">
+                    <label for="type">Type</label>
+                    <select id="type" name="type">
+                        <option value="Full-time">Full-time</option>
+                        <option value="Part-time">Part-time</option>
+                        <option value="Contract">Contract</option>
+                    </select>
+                </div>
+                <div class="form-group" id="salary-group" style="display: none;">
+                    <label for="salary">Salary</label>
+                    <input type="text" id="salary" name="salary">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Save</button>
+                    <button type="button" class="btn-secondary cancel-btn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="js/admin.js"></script>
+</body>
+</html>
