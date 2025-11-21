@@ -14,6 +14,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('about')) {
         loadAboutSection();
     }
+    // Load clients and team from API if present on the page
+    if (document.getElementById('clients')) {
+        loadClientsFront();
+    }
+    if (document.querySelector('.team-grid')) {
+        loadTeamFront();
+    }
     
     // Load jobs if on careers page
     if (document.getElementById('careers') || window.location.pathname.includes('careers')) {
@@ -199,10 +206,16 @@ function loadJobs() {
 }
 
 function loadAboutSection() {
-    loadData('./data/company.json')
+    // Prefer API endpoint for up-to-date company info
+    fetch('/api/company')
+        .then(resp => {
+            if (!resp.ok) throw new Error('Network response not ok');
+            return resp.json();
+        })
+        .catch(() => loadData('./data/company.json'))
         .then(data => {
             // Update company overview
-            const company = data.company;
+            const company = data.company || data;
             const header = document.querySelector('.about-overview h2');
             if (header) header.textContent = `About ${company.name}`;
 
@@ -235,10 +248,64 @@ function loadAboutSection() {
             const mission = document.querySelector('.mission-section p');
             if (mission) mission.textContent = company.mission;
 
-            // Update team members if the team section exists
-            updateTeamMembers(data.team);
+            // Update team members if the team section exists. Prefer separate team API.
+            if (document.querySelector('.team-grid')) loadTeamFront();
         })
         .catch(error => console.error('Error loading company info:', error));
+}
+
+// Load clients for the public site
+function loadClientsFront() {
+    // Try API first, fallback to data file
+    fetch('/api/clients')
+        .then(resp => {
+            if (!resp.ok) throw new Error('Network response not ok');
+            return resp.json();
+        })
+        .catch(() => loadData('./data/clients.json'))
+        .then(data => {
+            const clients = data.clients || [];
+            const grid = document.querySelector('.clients-grid');
+            if (!grid) return;
+
+            grid.innerHTML = '';
+
+            clients.forEach(c => {
+                const el = document.createElement('div');
+                el.className = 'client-logo';
+                el.innerHTML = `
+                    ${c.image ? `<img src="${c.image}" alt="${c.title || c.name}" />` : '<i class="fas fa-industry fa-3x"></i>'}
+                    <p>${c.title || c.name || ''}</p>
+                `;
+                // If a link exists, wrap image/text in anchor
+                if (c.link) {
+                    const a = document.createElement('a');
+                    a.href = c.link;
+                    a.target = '_blank';
+                    a.rel = 'noopener noreferrer';
+                    a.appendChild(el.cloneNode(true));
+                    grid.appendChild(a);
+                } else {
+                    grid.appendChild(el);
+                }
+            });
+        })
+        .catch(err => console.error('Error loading clients front:', err));
+}
+
+// Load team for the public site
+function loadTeamFront() {
+    fetch('/api/team')
+        .then(resp => {
+            if (!resp.ok) throw new Error('Network response not ok');
+            return resp.json();
+        })
+        .catch(() => loadData('./data/team.json'))
+        .then(data => {
+            const team = data.team || data || [];
+            updateTeamMembers(team);
+        })
+        .catch(err => console.error('Error loading team front:', err));
 }
 
 function updateTeamMembers(team) {
@@ -256,23 +323,33 @@ function updateTeamMembers(team) {
     team.forEach(person => {
         const memberCard = document.createElement('div');
         memberCard.className = 'team-member';
+
+        // avatar: use image if available, otherwise initials
+        const avatarHtml = person.image ?
+            `<div class="avatar"><img src="${person.image}" alt="${person.name || ''}"/></div>` :
+            `<div class="avatar"><span class="avatar-text">${(person.name || '').split(' ').map(n => n[0]).join('')}</span></div>`;
+
         memberCard.innerHTML = `
-            <div class="avatar">
-                <span class="avatar-text">${person.name.split(' ').map(n => n[0]).join('')}</span>
-            </div>
+            ${avatarHtml}
 
-            <h4 class="member-name">${person.name}</h4>
+            <h4 class="member-name">${person.name || person.title || ''}</h4>
 
-            <p class="member-position">${person.position}</p>
+            <p class="member-position">${person.role || person.position || ''}</p>
 
             <p class="member-bio">
-                ${person.bio}
+                ${person.bio || ''}
             </p>
 
-            <div class="expertise-tags">
-                ${person.expertise.map(skill => `<span class="expertise-tag">${skill}</span>`).join('')}
-            </div>
         `;
+
+        // If expertise exists (array), add tags
+        if (Array.isArray(person.expertise) && person.expertise.length) {
+            const tags = document.createElement('div');
+            tags.className = 'expertise-tags';
+            tags.innerHTML = person.expertise.map(skill => `<span class="expertise-tag">${skill}</span>`).join('');
+            memberCard.appendChild(tags);
+        }
+
         teamGrid.appendChild(memberCard);
     });
 }

@@ -18,6 +18,8 @@
             <button class="nav-btn" data-section="services">Services</button>
             <button class="nav-btn" data-section="gallery">Gallery</button>
             <button class="nav-btn" data-section="jobs">Jobs</button>
+            <button class="nav-btn" data-section="clients">Clients</button>
+            <button class="nav-btn" data-section="team">Team</button>
             <button class="nav-btn" data-section="company">Company Info</button>
         </nav>
         
@@ -56,6 +58,12 @@
                         <button class="action-btn" data-action="add-gallery">
                             <i class="fas fa-plus-circle"></i> Add Gallery Item
                         </button>
+                        <button class="action-btn" data-action="add-client">
+                            <i class="fas fa-plus-circle"></i> Add Client Logo
+                        </button>
+                        <button class="action-btn" data-action="add-team">
+                            <i class="fas fa-plus-circle"></i> Add Team Member
+                        </button>
                         <button class="action-btn" data-action="add-job">
                             <i class="fas fa-plus-circle"></i> Add Job Opening
                         </button>
@@ -90,6 +98,26 @@
                 
                 <div class="content-list" id="jobs-list">
                     <!-- Jobs will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Clients Section -->
+            <section id="clients" class="admin-section">
+                <h2>Manage Clients</h2>
+                <button id="add-client-btn" class="btn-primary"><i class="fas fa-plus"></i> Add New Client Logo</button>
+
+                <div class="content-list" id="clients-list">
+                    <!-- Client logos will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Team Section -->
+            <section id="team" class="admin-section">
+                <h2>Manage Team</h2>
+                <button id="add-team-btn" class="btn-primary"><i class="fas fa-plus"></i> Add Team Member</button>
+
+                <div class="content-list" id="team-list">
+                    <!-- Team members will be loaded here -->
                 </div>
             </section>
             
@@ -165,6 +193,21 @@
                 <div class="form-group" id="image-path-group" style="display: none;">
                     <label for="image-path">Image Path</label>
                     <input type="text" id="image-path" name="image" readonly>
+                </div>
+                <!-- Client link -->
+                <div class="form-group" id="link-group" style="display: none;">
+                    <label for="link">Client Website (optional)</label>
+                    <input type="url" id="link" name="link">
+                </div>
+
+                <!-- Team specific fields -->
+                <div class="form-group" id="role-group" style="display: none;">
+                    <label for="role">Role / Position</label>
+                    <input type="text" id="role" name="role">
+                </div>
+                <div class="form-group" id="bio-group" style="display: none;">
+                    <label for="bio">Short Bio</label>
+                    <textarea id="bio" name="bio" rows="3"></textarea>
                 </div>
                 
                 <div class="form-group" id="location-group" style="display: none;">

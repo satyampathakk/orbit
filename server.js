@@ -22,9 +22,10 @@ const ensureDirectories = () => {
         path.join(__dirname, 'images', 'services'),
         path.join(__dirname, 'images', 'gallery'),
         path.join(__dirname, 'images', 'team'),
+        path.join(__dirname, 'images', 'clients'),
         path.join(__dirname, 'uploads')
     ];
-    
+
     dirs.forEach(dir => {
         if (!fsSync.existsSync(dir)) {
             fsSync.mkdirSync(dir, { recursive: true });
@@ -39,7 +40,7 @@ const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         // Determine destination based on the category
         let uploadPath = path.join(__dirname, 'images', 'general');
-        
+
         // Determine the category from request headers/query/body
         // Prefer explicit header (set by client) or query param because
         // multipart/form-data fields may not be available yet in req.body
@@ -57,12 +58,12 @@ const storage = multer.diskStorage({
         } else if (req.headers.referer && req.headers.referer.includes('team')) {
             uploadPath = path.join(__dirname, 'images', 'team');
         }
-        
+
         // Create directory if it doesn't exist
         if (!fsSync.existsSync(uploadPath)) {
             fsSync.mkdirSync(uploadPath, { recursive: true });
         }
-        
+
         cb(null, uploadPath);
     },
     filename: function (req, file, cb) {
@@ -72,7 +73,7 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ 
+const upload = multer({
     storage: storage,
     limits: {
         fileSize: 5 * 1024 * 1024 // 5MB limit
@@ -93,6 +94,8 @@ const SERVICES_FILE = path.join(DATA_DIR, 'services.json');
 const GALLERY_FILE = path.join(DATA_DIR, 'gallery.json');
 const JOBS_FILE = path.join(DATA_DIR, 'jobs.json');
 const COMPANY_FILE = path.join(DATA_DIR, 'company.json');
+const CLIENTS_FILE = path.join(DATA_DIR, 'clients.json');
+const TEAM_FILE = path.join(DATA_DIR, 'team.json');
 
 // Helper function to read JSON file
 async function readJSONFile(filePath) {
@@ -126,6 +129,10 @@ async function readJSONFile(filePath) {
                     },
                     team: []
                 };
+            } else if (fileName === 'clients.json') {
+                return { clients: [] };
+            } else if (fileName === 'team.json') {
+                return { team: [] };
             }
         }
         throw error;
@@ -158,10 +165,10 @@ app.post('/api/services', upload.single('image'), async (req, res) => {
     try {
         const servicesData = await readJSONFile(SERVICES_FILE);
         const services = servicesData.services || [];
-        
+
         // Generate new ID (highest existing ID + 1)
         const newId = services.length > 0 ? Math.max(...services.map(s => s.id || 0)) + 1 : 1;
-        
+
         const newService = {
             id: newId,
             title: req.body.title,
@@ -169,10 +176,10 @@ app.post('/api/services', upload.single('image'), async (req, res) => {
             image: req.file ? `/images/services/${req.file.filename}` : req.body.image || '',
             icon: req.body.icon || 'fas fa-bolt'
         };
-        
+
         services.push(newService);
         await writeJSONFile(SERVICES_FILE, { services });
-        
+
         res.json({ success: true, service: newService });
     } catch (error) {
         console.error('Error adding service:', error);
@@ -185,26 +192,26 @@ app.put('/api/services/:id', upload.single('image'), async (req, res) => {
         const id = parseInt(req.params.id);
         const servicesData = await readJSONFile(SERVICES_FILE);
         const services = servicesData.services || [];
-        
+
         const index = services.findIndex(s => s.id === id);
         if (index === -1) {
             return res.status(404).json({ error: 'Service not found' });
         }
-        
+
         // Update service properties
         services[index].title = req.body.title || services[index].title;
         services[index].description = req.body.description || services[index].description;
         services[index].icon = req.body.icon || services[index].icon;
-        
+
         // Handle image update if provided
         if (req.file) {
             services[index].image = `/images/services/${req.file.filename}`;
         } else if (req.body.image) {
             services[index].image = req.body.image;
         }
-        
+
         await writeJSONFile(SERVICES_FILE, { services });
-        
+
         res.json({ success: true, service: services[index] });
     } catch (error) {
         console.error('Error updating service:', error);
@@ -217,15 +224,15 @@ app.delete('/api/services/:id', async (req, res) => {
         const id = parseInt(req.params.id);
         const servicesData = await readJSONFile(SERVICES_FILE);
         const services = servicesData.services || [];
-        
+
         const newServices = services.filter(s => s.id !== id);
-        
+
         if (services.length === newServices.length) {
             return res.status(404).json({ error: 'Service not found' });
         }
-        
+
         await writeJSONFile(SERVICES_FILE, { services: newServices });
-        
+
         res.json({ success: true });
     } catch (error) {
         console.error('Error deleting service:', error);
@@ -248,9 +255,9 @@ app.post('/api/gallery', upload.single('image'), async (req, res) => {
     try {
         const galleryData = await readJSONFile(GALLERY_FILE);
         const gallery = galleryData.gallery || [];
-        
+
         const newId = gallery.length > 0 ? Math.max(...gallery.map(g => g.id || 0)) + 1 : 1;
-        
+
         const newGalleryItem = {
             id: newId,
             title: req.body.title,
@@ -258,10 +265,10 @@ app.post('/api/gallery', upload.single('image'), async (req, res) => {
             image: req.file ? `/images/gallery/${req.file.filename}` : req.body.image || '',
             category: req.body.category || 'general'
         };
-        
+
         gallery.push(newGalleryItem);
         await writeJSONFile(GALLERY_FILE, { gallery });
-        
+
         res.json({ success: true, item: newGalleryItem });
     } catch (error) {
         console.error('Error adding gallery item:', error);
@@ -274,24 +281,24 @@ app.put('/api/gallery/:id', upload.single('image'), async (req, res) => {
         const id = parseInt(req.params.id);
         const galleryData = await readJSONFile(GALLERY_FILE);
         const gallery = galleryData.gallery || [];
-        
+
         const index = gallery.findIndex(g => g.id === id);
         if (index === -1) {
             return res.status(404).json({ error: 'Gallery item not found' });
         }
-        
+
         gallery[index].title = req.body.title || gallery[index].title;
         gallery[index].description = req.body.description || gallery[index].description;
         gallery[index].category = req.body.category || gallery[index].category;
-        
+
         if (req.file) {
             gallery[index].image = `/images/gallery/${req.file.filename}`;
         } else if (req.body.image) {
             gallery[index].image = req.body.image;
         }
-        
+
         await writeJSONFile(GALLERY_FILE, { gallery });
-        
+
         res.json({ success: true, item: gallery[index] });
     } catch (error) {
         console.error('Error updating gallery:', error);
@@ -304,15 +311,15 @@ app.delete('/api/gallery/:id', async (req, res) => {
         const id = parseInt(req.params.id);
         const galleryData = await readJSONFile(GALLERY_FILE);
         const gallery = galleryData.gallery || [];
-        
+
         const newGallery = gallery.filter(g => g.id !== id);
-        
+
         if (gallery.length === newGallery.length) {
             return res.status(404).json({ error: 'Gallery item not found' });
         }
-        
+
         await writeJSONFile(GALLERY_FILE, { gallery: newGallery });
-        
+
         res.json({ success: true });
     } catch (error) {
         console.error('Error deleting gallery item:', error);
@@ -335,9 +342,9 @@ app.post('/api/jobs', async (req, res) => {
     try {
         const jobsData = await readJSONFile(JOBS_FILE);
         const jobs = jobsData.jobs || [];
-        
+
         const newId = jobs.length > 0 ? Math.max(...jobs.map(j => j.id || 0)) + 1 : 1;
-        
+
         const newJob = {
             id: newId,
             title: req.body.title,
@@ -349,10 +356,10 @@ app.post('/api/jobs', async (req, res) => {
             // Ensure responsibilities exists for frontend rendering
             responsibilities: req.body.responsibilities ? req.body.responsibilities.split(',').map(r => r.trim()) : []
         };
-        
+
         jobs.push(newJob);
         await writeJSONFile(JOBS_FILE, { jobs });
-        
+
         res.json({ success: true, job: newJob });
     } catch (error) {
         console.error('Error adding job:', error);
@@ -365,12 +372,12 @@ app.put('/api/jobs/:id', async (req, res) => {
         const id = parseInt(req.params.id);
         const jobsData = await readJSONFile(JOBS_FILE);
         const jobs = jobsData.jobs || [];
-        
+
         const index = jobs.findIndex(j => j.id === id);
         if (index === -1) {
             return res.status(404).json({ error: 'Job not found' });
         }
-        
+
         jobs[index] = {
             ...jobs[index],
             title: req.body.title || jobs[index].title,
@@ -381,9 +388,9 @@ app.put('/api/jobs/:id', async (req, res) => {
             requirements: req.body.requirements ? req.body.requirements.split(',').map(r => r.trim()) : (jobs[index].requirements || []),
             responsibilities: req.body.responsibilities ? req.body.responsibilities.split(',').map(r => r.trim()) : (jobs[index].responsibilities || [])
         };
-        
+
         await writeJSONFile(JOBS_FILE, { jobs });
-        
+
         res.json({ success: true, job: jobs[index] });
     } catch (error) {
         console.error('Error updating job:', error);
@@ -396,15 +403,15 @@ app.delete('/api/jobs/:id', async (req, res) => {
         const id = parseInt(req.params.id);
         const jobsData = await readJSONFile(JOBS_FILE);
         const jobs = jobsData.jobs || [];
-        
+
         const newJobs = jobs.filter(j => j.id !== id);
-        
+
         if (jobs.length === newJobs.length) {
             return res.status(404).json({ error: 'Job not found' });
         }
-        
+
         await writeJSONFile(JOBS_FILE, { jobs: newJobs });
-        
+
         res.json({ success: true });
     } catch (error) {
         console.error('Error deleting job:', error);
@@ -426,18 +433,176 @@ app.get('/api/company', async (req, res) => {
 app.put('/api/company', async (req, res) => {
     try {
         const companyData = await readJSONFile(COMPANY_FILE);
-        
+
         companyData.company = {
             ...companyData.company,
             ...req.body
         };
-        
+
         await writeJSONFile(COMPANY_FILE, companyData);
-        
+
         res.json({ success: true, company: companyData.company });
     } catch (error) {
         console.error('Error updating company info:', error);
         res.status(500).json({ error: 'Failed to update company info' });
+    }
+});
+
+// Clients
+app.get('/api/clients', async (req, res) => {
+    try {
+        const data = await readJSONFile(CLIENTS_FILE);
+        res.json(data);
+    } catch (error) {
+        console.error('Error reading clients:', error);
+        res.status(500).json({ error: 'Failed to read clients data' });
+    }
+});
+
+app.post('/api/clients', upload.single('image'), async (req, res) => {
+    try {
+        const clientsData = await readJSONFile(CLIENTS_FILE);
+        const clients = clientsData.clients || [];
+
+        const newId = clients.length > 0 ? Math.max(...clients.map(c => c.id || 0)) + 1 : 1;
+
+        const newClient = {
+            id: newId,
+            title: req.body.title || req.body.name || 'Client Name',
+            link: req.body.link || '',
+            image: req.file ? `/images/clients/${req.file.filename}` : req.body.image || ''
+        };
+
+        clients.push(newClient);
+        await writeJSONFile(CLIENTS_FILE, { clients });
+
+        res.json({ success: true, client: newClient });
+    } catch (error) {
+        console.error('Error adding client:', error);
+        res.status(500).json({ error: 'Failed to add client' });
+    }
+});
+
+app.put('/api/clients/:id', upload.single('image'), async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const clientsData = await readJSONFile(CLIENTS_FILE);
+        const clients = clientsData.clients || [];
+
+        const index = clients.findIndex(c => c.id === id);
+        if (index === -1) return res.status(404).json({ error: 'Client not found' });
+
+        clients[index].title = req.body.title || req.body.name || clients[index].title;
+        clients[index].link = req.body.link || clients[index].link;
+
+        if (req.file) {
+            clients[index].image = `/images/clients/${req.file.filename}`;
+        } else if (req.body.image) {
+            clients[index].image = req.body.image;
+        }
+
+        await writeJSONFile(CLIENTS_FILE, { clients });
+        res.json({ success: true, client: clients[index] });
+    } catch (error) {
+        console.error('Error updating client:', error);
+        res.status(500).json({ error: 'Failed to update client' });
+    }
+});
+
+app.delete('/api/clients/:id', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const clientsData = await readJSONFile(CLIENTS_FILE);
+        const clients = clientsData.clients || [];
+
+        const newClients = clients.filter(c => c.id !== id);
+        if (clients.length === newClients.length) return res.status(404).json({ error: 'Client not found' });
+
+        await writeJSONFile(CLIENTS_FILE, { clients: newClients });
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting client:', error);
+        res.status(500).json({ error: 'Failed to delete client' });
+    }
+});
+
+// Team
+app.get('/api/team', async (req, res) => {
+    try {
+        const data = await readJSONFile(TEAM_FILE);
+        res.json(data);
+    } catch (error) {
+        console.error('Error reading team members:', error);
+        res.status(500).json({ error: 'Failed to read team data' });
+    }
+});
+
+app.post('/api/team', upload.single('image'), async (req, res) => {
+    try {
+        const teamData = await readJSONFile(TEAM_FILE);
+        const team = teamData.team || [];
+
+        const newId = team.length > 0 ? Math.max(...team.map(t => t.id || 0)) + 1 : 1;
+
+        const newMember = {
+            id: newId,
+            name: req.body.name || req.body.title || '',
+            role: req.body.role || '',
+            bio: req.body.bio || '',
+            image: req.file ? `/images/team/${req.file.filename}` : req.body.image || ''
+        };
+
+        team.push(newMember);
+        await writeJSONFile(TEAM_FILE, { team });
+
+        res.json({ success: true, member: newMember });
+    } catch (error) {
+        console.error('Error adding team member:', error);
+        res.status(500).json({ error: 'Failed to add team member' });
+    }
+});
+
+app.put('/api/team/:id', upload.single('image'), async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const teamData = await readJSONFile(TEAM_FILE);
+        const team = teamData.team || [];
+
+        const index = team.findIndex(t => t.id === id);
+        if (index === -1) return res.status(404).json({ error: 'Team member not found' });
+
+        team[index].name = req.body.name || req.body.title || team[index].name;
+        team[index].role = req.body.role || team[index].role;
+        team[index].bio = req.body.bio || team[index].bio;
+
+        if (req.file) {
+            team[index].image = `/images/team/${req.file.filename}`;
+        } else if (req.body.image) {
+            team[index].image = req.body.image;
+        }
+
+        await writeJSONFile(TEAM_FILE, { team });
+        res.json({ success: true, member: team[index] });
+    } catch (error) {
+        console.error('Error updating team member:', error);
+        res.status(500).json({ error: 'Failed to update team member' });
+    }
+});
+
+app.delete('/api/team/:id', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const teamData = await readJSONFile(TEAM_FILE);
+        const team = teamData.team || [];
+
+        const newTeam = team.filter(t => t.id !== id);
+        if (team.length === newTeam.length) return res.status(404).json({ error: 'Team member not found' });
+
+        await writeJSONFile(TEAM_FILE, { team: newTeam });
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting team member:', error);
+        res.status(500).json({ error: 'Failed to delete team member' });
     }
 });
 

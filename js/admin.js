@@ -61,6 +61,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 case 'add-job':
                     openModal('job', null);
                     break;
+                case 'add-client':
+                    openModal('client', null);
+                    break;
+                case 'add-team':
+                    openModal('team', null);
+                    break;
             }
         });
     });
@@ -69,6 +75,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('add-service-btn').addEventListener('click', () => openModal('service', null));
     document.getElementById('add-gallery-btn').addEventListener('click', () => openModal('gallery', null));
     document.getElementById('add-job-btn').addEventListener('click', () => openModal('job', null));
+    // New add buttons for clients and team (may not exist on every page load)
+    const addClientBtn = document.getElementById('add-client-btn');
+    if (addClientBtn) addClientBtn.addEventListener('click', () => openModal('client', null));
+    const addTeamBtn = document.getElementById('add-team-btn');
+    if (addTeamBtn) addTeamBtn.addEventListener('click', () => openModal('team', null));
     
     // Company form submission
     document.getElementById('company-form').addEventListener('submit', handleCompanyFormSubmit);
@@ -92,10 +103,82 @@ function loadContent(section) {
         case 'jobs':
             loadJobs();
             break;
+        case 'clients':
+            loadClients();
+            break;
+        case 'team':
+            loadTeam();
+            break;
         case 'company':
             loadCompanyInfo();
             break;
     }
+}
+
+function loadClients() {
+    fetch('/api/clients')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('clients-list');
+            container.innerHTML = '';
+
+            (data.clients || []).forEach(client => {
+                const item = document.createElement('div');
+                item.className = 'content-item';
+                item.innerHTML = `
+                    <div class="content-info">
+                        <h3>${client.title || client.name}</h3>
+                        <p>${client.link || ''}</p>
+                    </div>
+                    <div class="content-actions">
+                        <button class="btn-secondary" onclick="openModal('client', ${client.id})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn-danger" onclick="deleteClient(${client.id})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading clients:', error);
+            document.getElementById('clients-list').innerHTML = '<p>Error loading clients. Check console for details.</p>';
+        });
+}
+
+function loadTeam() {
+    fetch('/api/team')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('team-list');
+            container.innerHTML = '';
+
+            (data.team || []).forEach(member => {
+                const item = document.createElement('div');
+                item.className = 'content-item';
+                item.innerHTML = `
+                    <div class="content-info">
+                        <h3>${member.name || member.title}</h3>
+                        <p>${member.role || ''}</p>
+                    </div>
+                    <div class="content-actions">
+                        <button class="btn-secondary" onclick="openModal('team', ${member.id})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn-danger" onclick="deleteTeamMember(${member.id})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading team members:', error);
+            document.getElementById('team-list').innerHTML = '<p>Error loading team members. Check console for details.</p>';
+        });
 }
 
 function loadDashboardStats() {
@@ -249,18 +332,30 @@ function openModal(contentType, id = null) {
     // Reset form
     form.reset();
     currentImageFile = null;
+
+    // Update the generic title label to be context-aware (e.g., 'Name' for team)
+    const titleLabel = document.querySelector('label[for="title"]');
+    if (titleLabel) {
+        titleLabel.textContent = contentType === 'team' ? 'Name' : 'Title';
+    }
     
     // Show/hide fields based on content type
     const imagePathGroup = document.getElementById('image-path-group');
     const locationGroup = document.getElementById('location-group');
     const typeGroup = document.getElementById('type-group');
     const salaryGroup = document.getElementById('salary-group');
+    const linkGroup = document.getElementById('link-group');
+    const roleGroup = document.getElementById('role-group');
+    const bioGroup = document.getElementById('bio-group');
     
     // Hide all specific fields first
     imagePathGroup.style.display = 'none'; // Hide for now, will show when image is uploaded
     locationGroup.style.display = 'none';
     typeGroup.style.display = 'none';
     salaryGroup.style.display = 'none';
+    if (linkGroup) linkGroup.style.display = 'none';
+    if (roleGroup) roleGroup.style.display = 'none';
+    if (bioGroup) bioGroup.style.display = 'none';
     
     if (contentType === 'job') {
         locationGroup.style.display = 'block';
@@ -269,6 +364,13 @@ function openModal(contentType, id = null) {
         imagePathGroup.style.display = 'block';
     } else if (contentType === 'gallery') {
         imagePathGroup.style.display = 'block';
+    } else if (contentType === 'client') {
+        imagePathGroup.style.display = 'block';
+        if (linkGroup) linkGroup.style.display = 'block';
+    } else if (contentType === 'team') {
+        imagePathGroup.style.display = 'block';
+        if (roleGroup) roleGroup.style.display = 'block';
+        if (bioGroup) bioGroup.style.display = 'block';
     } else { // service
         imagePathGroup.style.display = 'block';
     }
@@ -300,6 +402,12 @@ function loadContentForEdit(contentType, id) {
         case 'job':
             promise = loadData('./data/jobs.json').then(data => data.jobs.find(item => item.id == id));
             break;
+        case 'client':
+            promise = loadData('./data/clients.json').then(data => (data.clients || []).find(item => item.id == id));
+            break;
+        case 'team':
+            promise = loadData('./data/team.json').then(data => (data.team || []).find(item => item.id == id));
+            break;
     }
     
     promise.then(item => {
@@ -322,6 +430,13 @@ function loadContentForEdit(contentType, id) {
             document.getElementById('location').value = item.location || '';
             document.getElementById('type').value = item.type || 'Full-time';
             document.getElementById('salary').value = item.salary || '';
+        } else if (contentType === 'client') {
+            document.getElementById('link').value = item.link || '';
+        } else if (contentType === 'team') {
+            // team may use 'name' instead of title
+            if (item.name) document.getElementById('title').value = item.name;
+            document.getElementById('role').value = item.role || '';
+            document.getElementById('bio').value = item.bio || '';
         }
     }).catch(error => {
         console.error('Error loading item for edit:', error);
@@ -356,6 +471,17 @@ function handleFormSubmit(e) {
         itemData.type = data.type;
         itemData.salary = data.salary;
     }
+    // Client-specific fields
+    if (currentContentType === 'client') {
+        itemData.link = data.link;
+    }
+    // Team-specific fields
+    if (currentContentType === 'team') {
+        // store team name in title if provided
+        if (data.title) itemData.name = data.title;
+        itemData.role = data.role;
+        itemData.bio = data.bio;
+    }
     
     if (currentEditing) {
         updateContent(currentContentType, currentEditing, itemData);
@@ -382,10 +508,18 @@ function addNewContent(contentType, data) {
             url = '/api/jobs';
             itemName = 'Job';
             break;
+        case 'client':
+            url = '/api/clients';
+            itemName = 'Client';
+            break;
+        case 'team':
+            url = '/api/team';
+            itemName = 'Team Member';
+            break;
     }
 
     // If a file was selected in the modal, send as multipart/form-data so the server can store the image
-    if (currentImageFile && (contentType === 'service' || contentType === 'gallery')) {
+    if (currentImageFile && (contentType === 'service' || contentType === 'gallery' || contentType === 'client' || contentType === 'team')) {
         const formData = new FormData();
         formData.append('title', data.title || '');
         formData.append('description', data.description || '');
@@ -398,6 +532,16 @@ function addNewContent(contentType, data) {
             // allow explicit category if provided, otherwise default to 'gallery'
             formData.append('category', data.category || 'gallery');
         }
+        // Append content-type specific fields so server can persist them
+        if (contentType === 'client' && data.link) {
+            formData.append('link', data.link);
+        }
+        if (contentType === 'team') {
+            // team members prefer 'name' over 'title'
+            formData.append('name', data.name || data.title || '');
+            if (data.role) formData.append('role', data.role);
+            if (data.bio) formData.append('bio', data.bio);
+        }
         // append image file under field name 'image' (server expects this)
         formData.append('image', currentImageFile);
 
@@ -405,6 +549,8 @@ function addNewContent(contentType, data) {
         const headers = {};
         if (contentType === 'service') headers['X-Category'] = 'services';
         else if (contentType === 'gallery') headers['X-Category'] = data.category || 'gallery';
+        else if (contentType === 'client') headers['X-Category'] = 'clients';
+        else if (contentType === 'team') headers['X-Category'] = 'team';
 
         fetch(url, {
             method: 'POST',
@@ -415,8 +561,12 @@ function addNewContent(contentType, data) {
             .then(result => {
                 if (result.success) {
                     alert(`${itemName} added successfully!`);
-                    loadContent(contentType === 'gallery' ? 'gallery' :
-                               contentType === 'job' ? 'jobs' : 'services');
+                    // reload the appropriate section after adding
+                    if (contentType === 'gallery') loadContent('gallery');
+                    else if (contentType === 'job') loadContent('jobs');
+                    else if (contentType === 'client') loadContent('clients');
+                    else if (contentType === 'team') loadContent('team');
+                    else loadContent('services');
                 } else {
                     alert(`Error adding ${itemName}: ${result.error || 'Unknown error'}`);
                 }
@@ -438,8 +588,11 @@ function addNewContent(contentType, data) {
             .then(result => {
                 if (result.success) {
                     alert(`${itemName} added successfully!`);
-                    loadContent(contentType === 'gallery' ? 'gallery' :
-                               contentType === 'job' ? 'jobs' : 'services');
+                    if (contentType === 'gallery') loadContent('gallery');
+                    else if (contentType === 'job') loadContent('jobs');
+                    else if (contentType === 'client') loadContent('clients');
+                    else if (contentType === 'team') loadContent('team');
+                    else loadContent('services');
                 } else {
                     alert(`Error adding ${itemName}: ${result.error || 'Unknown error'}`);
                 }
@@ -468,10 +621,18 @@ function updateContent(contentType, id, data) {
             url = `/api/jobs/${id}`;
             itemName = 'Job';
             break;
+        case 'client':
+            url = `/api/clients/${id}`;
+            itemName = 'Client';
+            break;
+        case 'team':
+            url = `/api/team/${id}`;
+            itemName = 'Team Member';
+            break;
     }
 
     // If a new file was selected, send as multipart/form-data so the server can store the image
-    if (currentImageFile && (contentType === 'service' || contentType === 'gallery')) {
+    if (currentImageFile && (contentType === 'service' || contentType === 'gallery' || contentType === 'client' || contentType === 'team')) {
         const formData = new FormData();
         formData.append('title', data.title || '');
         formData.append('description', data.description || '');
@@ -483,12 +644,24 @@ function updateContent(contentType, id, data) {
         } else if (contentType === 'gallery') {
             formData.append('category', data.category || 'gallery');
         }
+        // Append content-type specific fields so server can persist them on update
+        if (contentType === 'client' && data.link) {
+            formData.append('link', data.link);
+        }
+        if (contentType === 'team') {
+            formData.append('name', data.name || data.title || '');
+            if (data.role) formData.append('role', data.role);
+            if (data.bio) formData.append('bio', data.bio);
+        }
+        // for client/team we don't need category but ensure image appended
         formData.append('image', currentImageFile);
 
         // include X-Category header so server can determine destination reliably
         const headers = {};
         if (contentType === 'service') headers['X-Category'] = 'services';
         else if (contentType === 'gallery') headers['X-Category'] = data.category || 'gallery';
+        else if (contentType === 'client') headers['X-Category'] = 'clients';
+        else if (contentType === 'team') headers['X-Category'] = 'team';
 
         fetch(url, {
             method: 'PUT',
@@ -499,8 +672,11 @@ function updateContent(contentType, id, data) {
             .then(result => {
                 if (result.success) {
                     alert(`${itemName} updated successfully!`);
-                    loadContent(contentType === 'gallery' ? 'gallery' :
-                               contentType === 'job' ? 'jobs' : 'services');
+                    if (contentType === 'gallery') loadContent('gallery');
+                    else if (contentType === 'job') loadContent('jobs');
+                    else if (contentType === 'client') loadContent('clients');
+                    else if (contentType === 'team') loadContent('team');
+                    else loadContent('services');
                 } else {
                     alert(`Error updating ${itemName}: ${result.error || 'Unknown error'}`);
                 }
@@ -521,8 +697,11 @@ function updateContent(contentType, id, data) {
             .then(result => {
                 if (result.success) {
                     alert(`${itemName} updated successfully!`);
-                    loadContent(contentType === 'gallery' ? 'gallery' :
-                               contentType === 'job' ? 'jobs' : 'services');
+                    if (contentType === 'gallery') loadContent('gallery');
+                    else if (contentType === 'job') loadContent('jobs');
+                    else if (contentType === 'client') loadContent('clients');
+                    else if (contentType === 'team') loadContent('team');
+                    else loadContent('services');
                 } else {
                     alert(`Error updating ${itemName}: ${result.error || 'Unknown error'}`);
                 }
@@ -594,6 +773,48 @@ function deleteJob(id) {
         .catch(error => {
             console.error('Error deleting job:', error);
             alert('Error deleting job');
+        });
+}
+
+function deleteClient(id) {
+    if (!confirm('Are you sure you want to delete this client?')) return;
+
+    fetch(`/api/clients/${id}`, {
+        method: 'DELETE'
+    })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                alert('Client deleted successfully!');
+                loadClients();
+            } else {
+                alert(`Error deleting client: ${result.error || 'Unknown error'}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting client:', error);
+            alert('Error deleting client');
+        });
+}
+
+function deleteTeamMember(id) {
+    if (!confirm('Are you sure you want to delete this team member?')) return;
+
+    fetch(`/api/team/${id}`, {
+        method: 'DELETE'
+    })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                alert('Team member deleted successfully!');
+                loadTeam();
+            } else {
+                alert(`Error deleting team member: ${result.error || 'Unknown error'}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting team member:', error);
+            alert('Error deleting team member');
         });
 }
 

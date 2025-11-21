@@ -1,0 +1,18 @@
+{
+  "team": [
+    {
+      "id": 5,
+      "name": "utkarsh",
+      "role": "role/pos",
+      "bio": "short bio",
+      "image": "/images/team/1763300302530-741640343.jpg"
+    },
+    {
+      "id": 6,
+      "name": "Jatin",
+      "role": "CEO",
+      "bio": "hello from ceo",
+      "image": "/images/team/1763706206394-920571641.jpeg"
+    }
+  ]
+}

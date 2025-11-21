@@ -1,0 +1,34 @@
+{
+  "clients": [
+    {
+      "id": 6,
+      "title": "MAN Structurals",
+      "link": "",
+      "image": "/images/clients/1763300077978-741913921.jpg"
+    },
+    {
+      "id": 7,
+      "title": "IC Infra",
+      "link": "",
+      "image": "/images/clients/1763705893476-222647345.png"
+    },
+    {
+      "id": 8,
+      "title": "Stambh",
+      "link": "",
+      "image": "/images/clients/1763705921706-615681915.png"
+    },
+    {
+      "id": 9,
+      "title": "Jakson",
+      "link": "",
+      "image": "/images/clients/1763705963301-806219744.jpg"
+    },
+    {
+      "id": 10,
+      "title": "SR Infratech",
+      "link": "",
+      "image": "/images/clients/1763705996227-561414065.webp"
+    }
+  ]
+}
