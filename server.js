@@ -352,9 +352,13 @@ app.post('/api/jobs', async (req, res) => {
             location: req.body.location,
             type: req.body.type || 'Full-time',
             salary: req.body.salary,
-            requirements: req.body.requirements ? req.body.requirements.split(',').map(r => r.trim()) : [],
+            requirements: Array.isArray(req.body.requirements)
+                ? req.body.requirements
+                : req.body.requirements ? req.body.requirements.split(',').map(r => r.trim()) : [],
             // Ensure responsibilities exists for frontend rendering
-            responsibilities: req.body.responsibilities ? req.body.responsibilities.split(',').map(r => r.trim()) : []
+            responsibilities: Array.isArray(req.body.responsibilities)
+                ? req.body.responsibilities
+                : req.body.responsibilities ? req.body.responsibilities.split(',').map(r => r.trim()) : []
         };
 
         jobs.push(newJob);
@@ -385,8 +389,12 @@ app.put('/api/jobs/:id', async (req, res) => {
             location: req.body.location || jobs[index].location,
             type: req.body.type || jobs[index].type,
             salary: req.body.salary || jobs[index].salary,
-            requirements: req.body.requirements ? req.body.requirements.split(',').map(r => r.trim()) : (jobs[index].requirements || []),
-            responsibilities: req.body.responsibilities ? req.body.responsibilities.split(',').map(r => r.trim()) : (jobs[index].responsibilities || [])
+            requirements: Array.isArray(req.body.requirements)
+                ? req.body.requirements
+                : req.body.requirements ? req.body.requirements.split(',').map(r => r.trim()) : (jobs[index].requirements || []),
+            responsibilities: Array.isArray(req.body.responsibilities)
+                ? req.body.responsibilities
+                : req.body.responsibilities ? req.body.responsibilities.split(',').map(r => r.trim()) : (jobs[index].responsibilities || [])
         };
 
         await writeJSONFile(JOBS_FILE, { jobs });

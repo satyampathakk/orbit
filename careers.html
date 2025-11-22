@@ -111,10 +111,6 @@
                             <label for="position">Position Applying For</label>
                             <select id="position" name="position" required>
                                 <option value="">Select a position</option>
-                                <option value="senior-electrical-engineer">Senior Electrical Engineer</option>
-                                <option value="system-integration-specialist">System Integration Specialist</option>
-                                <option value="field-service-engineer">Field Service Engineer</option>
-                                <option value="safety-compliance-officer">Safety Compliance Officer</option>
                                 <option value="other">Other</option>
                             </select>
                         </div>
@@ -233,23 +229,26 @@
             if (document.querySelector('.openings-container')) {
                 loadJobs();
             }
-            
+
+            // Load position dropdown options
+            loadPositionOptions();
+
             // Initialize existing functionality
             initializeNavigation();
-            
+
             // Form submission handling
             const form = document.getElementById('career-application-form');
             if (form) {
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    
+
                     // Get form values
                     const firstName = document.getElementById('firstName').value;
                     const lastName = document.getElementById('lastName').value;
                     const email = document.getElementById('email').value;
                     const phone = document.getElementById('phone').value;
                     const position = document.getElementById('position').value;
-                    
+
                     // Basic validation
                     if (firstName && lastName && email && phone && position) {
                         // In a real application, you would send this data to a server
@@ -261,6 +260,34 @@
                 });
             }
         });
+
+        // Function to load position options from jobs data
+        function loadPositionOptions() {
+            // Use the same loadData function that's used in main.js
+            loadData('./data/jobs.json')
+                .then(data => {
+                    const positionSelect = document.getElementById('position');
+                    if (!positionSelect) return;
+
+                    // Clear existing options except the default ones
+                    const defaultOptions = Array.from(positionSelect.querySelectorAll('option[value=""], option[value="other"]'));
+                    positionSelect.innerHTML = '';
+
+                    // Re-add default options
+                    defaultOptions.forEach(option => {
+                        positionSelect.appendChild(option);
+                    });
+
+                    // Add options from jobs data
+                    data.jobs.forEach(job => {
+                        const option = document.createElement('option');
+                        option.value = job.title.toLowerCase().replace(/\s+/g, '-');
+                        option.textContent = `${job.title} (${job.location})`;
+                        positionSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error loading position options:', error));
+        }
     </script>
 </body>
 </html>

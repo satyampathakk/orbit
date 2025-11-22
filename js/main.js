@@ -176,27 +176,43 @@ function loadJobs() {
                 const jobCard = document.createElement('div');
                 jobCard.className = 'job-card';
                 jobCard.innerHTML = `
-                    <div class="job-header">
-                        <h3 class="job-title">${job.title}</h3>
-                        <div class="job-meta">
-                            <span><i class="fas fa-map-marker-alt"></i> ${job.location}</span>
-                            <span><i class="fas fa-briefcase"></i> ${job.type}</span>
-                            <span><i class="fas fa-coins"></i> ${job.salary}</span>
+                    <div class="job-card-content">
+                        <div class="job-card-header">
+                            <h3 class="job-title">${job.title}</h3>
+                            <div class="job-tags">
+                                <span class="job-location"><i class="fas fa-map-marker-alt"></i> ${job.location}</span>
+                                <span class="job-type">${job.type}</span>
+                                <span class="job-salary">${job.salary}</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="job-description">
-                        <p>${job.description}</p>
-                    </div>
-                    <div class="job-requirements">
-                        <h4>Key Responsibilities:</h4>
-                        <ul>
-                            ${ (job.responsibilities || []).map(resp => `<li><i class="fas fa-check"></i> ${resp}</li>`).join('') }
-                        </ul>
 
-                        <h4>Requirements:</h4>
-                        <ul>
-                            ${ (job.requirements || []).map(req => `<li><i class="fas fa-check"></i> ${req}</li>`).join('') }
-                        </ul>
+                        <div class="job-card-body">
+                            <p class="job-description">${job.description}</p>
+
+                            <div class="job-details">
+                                ${(job.responsibilities && job.responsibilities.length > 0) ? `
+                                <div class="job-section">
+                                    <h4><i class="fas fa-briefcase"></i> Key Responsibilities</h4>
+                                    <ul>
+                                        ${job.responsibilities.map(resp => `<li><i class="fas fa-check-circle"></i> ${resp}</li>`).join('')}
+                                    </ul>
+                                </div>
+                                ` : ''}
+
+                                ${(job.requirements && job.requirements.length > 0) ? `
+                                <div class="job-section">
+                                    <h4><i class="fas fa-clipboard-list"></i> Requirements</h4>
+                                    <ul>
+                                        ${job.requirements.map(req => `<li><i class="fas fa-check-circle"></i> ${req}</li>`).join('')}
+                                    </ul>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        <div class="job-card-footer">
+                            <a href="#application" class="btn btn-primary apply-btn">Apply Now</a>
+                        </div>
                     </div>
                 `;
                 container.appendChild(jobCard);
@@ -245,7 +261,7 @@ function loadAboutSection() {
             }
 
             // Update mission
-            const mission = document.querySelector('.mission-section p');
+            const mission = document.querySelector('.mission-section .mission-text');
             if (mission) mission.textContent = company.mission;
 
             // Update team members if the team section exists. Prefer separate team API.

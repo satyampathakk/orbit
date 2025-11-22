@@ -340,39 +340,50 @@ function openModal(contentType, id = null) {
     }
     
     // Show/hide fields based on content type
+    const imageUploadGroup = document.getElementById('image-upload-group');
     const imagePathGroup = document.getElementById('image-path-group');
+    const descriptionGroup = document.getElementById('description-group');
     const locationGroup = document.getElementById('location-group');
     const typeGroup = document.getElementById('type-group');
     const salaryGroup = document.getElementById('salary-group');
+    const responsibilitiesGroup = document.getElementById('responsibilities-group');
+    const requirementsGroup = document.getElementById('requirements-group');
     const linkGroup = document.getElementById('link-group');
     const roleGroup = document.getElementById('role-group');
     const bioGroup = document.getElementById('bio-group');
-    
+
     // Hide all specific fields first
+    imageUploadGroup.style.display = 'block'; // Show by default
     imagePathGroup.style.display = 'none'; // Hide for now, will show when image is uploaded
+    descriptionGroup.style.display = 'block'; // Show by default for most content types
     locationGroup.style.display = 'none';
     typeGroup.style.display = 'none';
     salaryGroup.style.display = 'none';
+    responsibilitiesGroup.style.display = 'none';
+    requirementsGroup.style.display = 'none';
     if (linkGroup) linkGroup.style.display = 'none';
     if (roleGroup) roleGroup.style.display = 'none';
     if (bioGroup) bioGroup.style.display = 'none';
-    
+
     if (contentType === 'job') {
         locationGroup.style.display = 'block';
         typeGroup.style.display = 'block';
         salaryGroup.style.display = 'block';
-        imagePathGroup.style.display = 'block';
+        responsibilitiesGroup.style.display = 'block';
+        requirementsGroup.style.display = 'block';
+        imageUploadGroup.style.display = 'none'; // Hide image upload for jobs since it's not needed
     } else if (contentType === 'gallery') {
-        imagePathGroup.style.display = 'block';
+        imageUploadGroup.style.display = 'block';
     } else if (contentType === 'client') {
-        imagePathGroup.style.display = 'block';
+        imageUploadGroup.style.display = 'block';
         if (linkGroup) linkGroup.style.display = 'block';
     } else if (contentType === 'team') {
-        imagePathGroup.style.display = 'block';
+        imageUploadGroup.style.display = 'block';
+        descriptionGroup.style.display = 'none'; // Hide description for team - use bio instead
         if (roleGroup) roleGroup.style.display = 'block';
         if (bioGroup) bioGroup.style.display = 'block';
     } else { // service
-        imagePathGroup.style.display = 'block';
+        imageUploadGroup.style.display = 'block';
     }
     
     if (id) {
@@ -430,6 +441,9 @@ function loadContentForEdit(contentType, id) {
             document.getElementById('location').value = item.location || '';
             document.getElementById('type').value = item.type || 'Full-time';
             document.getElementById('salary').value = item.salary || '';
+            // Handle responsibilities and requirements (converting array to newline-separated string)
+            document.getElementById('responsibilities').value = Array.isArray(item.responsibilities) ? item.responsibilities.join('\n') : item.responsibilities || '';
+            document.getElementById('requirements').value = Array.isArray(item.requirements) ? item.requirements.join('\n') : item.requirements || '';
         } else if (contentType === 'client') {
             document.getElementById('link').value = item.link || '';
         } else if (contentType === 'team') {
@@ -437,6 +451,10 @@ function loadContentForEdit(contentType, id) {
             if (item.name) document.getElementById('title').value = item.name;
             document.getElementById('role').value = item.role || '';
             document.getElementById('bio').value = item.bio || '';
+            // Don't populate description for team members since it's hidden
+        } else {
+            // For other content types, populate description
+            document.getElementById('description').value = item.description || '';
         }
     }).catch(error => {
         console.error('Error loading item for edit:', error);
@@ -446,15 +464,44 @@ function loadContentForEdit(contentType, id) {
 
 function handleFormSubmit(e) {
     e.preventDefault();
-    
+
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData);
-    
+
     // Prepare the item data
-    const itemData = {
-        title: data.title,
-        description: data.description
-    };
+    let itemData;
+
+    // For team members, we use name and bio; for others, we use title and description
+    if (currentContentType === 'team') {
+        // Validate required fields for team
+        if (!data.title || data.title.trim() === '') {
+            alert('Name is required for team members.');
+            return;
+        }
+        if (!document.getElementById('bio').value || document.getElementById('bio').value.trim() === '') {
+            alert('Short Bio is required for team members.');
+            return;
+        }
+
+        itemData = {
+            title: data.title
+        };
+    } else {
+        // Validate required fields for other content types
+        if (!data.title || data.title.trim() === '') {
+            alert('Title is required.');
+            return;
+        }
+        if (!data.description || data.description.trim() === '') {
+            alert('Description is required.');
+            return;
+        }
+
+        itemData = {
+            title: data.title,
+            description: data.description
+        };
+    }
     
     // Add image if provided
     if (data.image && data.image.trim()) {
@@ -467,9 +514,19 @@ function handleFormSubmit(e) {
     
     // Add content type specific fields
     if (currentContentType === 'job') {
-        itemData.location = data.location;
-        itemData.type = data.type;
-        itemData.salary = data.salary;
+        itemData.location = data.location || document.getElementById('location').value;
+        itemData.type = data.type || document.getElementById('type').value;
+        itemData.salary = data.salary || document.getElementById('salary').value;
+        // Get responsibilities and requirements from form elements since they're not in FormData
+        const responsibilities = document.getElementById('responsibilities').value;
+        const requirements = document.getElementById('requirements').value;
+        // Convert newline-separated responsibilities and requirements to arrays
+        if (responsibilities) {
+            itemData.responsibilities = responsibilities.split('\n').filter(line => line.trim() !== '');
+        }
+        if (requirements) {
+            itemData.requirements = requirements.split('\n').filter(line => line.trim() !== '');
+        }
     }
     // Client-specific fields
     if (currentContentType === 'client') {
@@ -480,7 +537,12 @@ function handleFormSubmit(e) {
         // store team name in title if provided
         if (data.title) itemData.name = data.title;
         itemData.role = data.role;
-        itemData.bio = data.bio;
+        // Use bio field for team members instead of description
+        itemData.bio = document.getElementById('bio').value;
+        // Don't include description for team members since it's hidden
+    } else {
+        // For other content types, use description
+        itemData.description = data.description;
     }
     
     if (currentEditing) {
@@ -542,6 +604,29 @@ function addNewContent(contentType, data) {
             if (data.role) formData.append('role', data.role);
             if (data.bio) formData.append('bio', data.bio);
         }
+        // Add job-specific fields (responsibilities and requirements) to form data
+        if (contentType === 'job') {
+            formData.append('location', document.getElementById('location').value);
+            formData.append('type', document.getElementById('type').value);
+            formData.append('salary', document.getElementById('salary').value);
+            // For responsibilities and requirements, append them to form data
+            const responsibilities = document.getElementById('responsibilities').value;
+            const requirements = document.getElementById('requirements').value;
+
+            if (responsibilities) {
+                const respArray = responsibilities.split('\n').filter(line => line.trim() !== '');
+                respArray.forEach((resp, index) => {
+                    formData.append(`responsibilities[${index}]`, resp);
+                });
+            }
+            if (requirements) {
+                const reqArray = requirements.split('\n').filter(line => line.trim() !== '');
+                reqArray.forEach((req, index) => {
+                    formData.append(`requirements[${index}]`, req);
+                });
+            }
+        }
+
         // append image file under field name 'image' (server expects this)
         formData.append('image', currentImageFile);
 
@@ -551,6 +636,7 @@ function addNewContent(contentType, data) {
         else if (contentType === 'gallery') headers['X-Category'] = data.category || 'gallery';
         else if (contentType === 'client') headers['X-Category'] = 'clients';
         else if (contentType === 'team') headers['X-Category'] = 'team';
+        else if (contentType === 'job') headers['X-Category'] = 'jobs';
 
         fetch(url, {
             method: 'POST',
@@ -577,12 +663,51 @@ function addNewContent(contentType, data) {
             });
     } else {
         // Fallback to JSON submission when no file upload is required
+        // In this case, we need to get the values from the actual form fields, not from the FormData object
+        const itemData = {
+            title: document.getElementById('title').value,
+            description: document.getElementById('description').value
+        };
+
+        // Add content type specific fields
+        if (currentContentType === 'job') {
+            itemData.location = document.getElementById('location').value;
+            itemData.type = document.getElementById('type').value;
+            itemData.salary = document.getElementById('salary').value;
+            // Get responsibilities and requirements from the form fields
+            const responsibilities = document.getElementById('responsibilities').value;
+            const requirements = document.getElementById('requirements').value;
+
+            // Convert newline-separated responsibilities and requirements to arrays
+            if (responsibilities) {
+                itemData.responsibilities = responsibilities.split('\n').filter(line => line.trim() !== '');
+            }
+            if (requirements) {
+                itemData.requirements = requirements.split('\n').filter(line => line.trim() !== '');
+            }
+        }
+        // Client-specific fields
+        if (currentContentType === 'client') {
+            itemData.link = document.getElementById('link').value;
+        }
+        // Team-specific fields
+        if (currentContentType === 'team') {
+            // store team name in title if provided
+            if (document.getElementById('title').value) itemData.name = document.getElementById('title').value;
+            itemData.role = document.getElementById('role').value;
+            itemData.bio = document.getElementById('bio').value;
+            // Don't include description for team members since it's hidden
+        } else {
+            // For other content types, use description
+            itemData.description = document.getElementById('description').value;
+        }
+
         fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(itemData)
         })
             .then(response => response.json())
             .then(result => {
@@ -651,7 +776,33 @@ function updateContent(contentType, id, data) {
         if (contentType === 'team') {
             formData.append('name', data.name || data.title || '');
             if (data.role) formData.append('role', data.role);
-            if (data.bio) formData.append('bio', data.bio);
+            // Use the bio field value directly from the element since it's not in FormData
+            const bioValue = document.getElementById('bio').value;
+            if (bioValue) formData.append('bio', bioValue);
+        } else {
+            // For other content types, include description
+            if (data.description) formData.append('description', data.description);
+        }
+        if (contentType === 'job') {
+            formData.append('location', document.getElementById('location').value);
+            formData.append('type', document.getElementById('type').value);
+            formData.append('salary', document.getElementById('salary').value);
+            // For responsibilities and requirements, append them to form data
+            const responsibilities = document.getElementById('responsibilities').value;
+            const requirements = document.getElementById('requirements').value;
+
+            if (responsibilities) {
+                const respArray = responsibilities.split('\n').filter(line => line.trim() !== '');
+                respArray.forEach((resp, index) => {
+                    formData.append(`responsibilities[${index}]`, resp);
+                });
+            }
+            if (requirements) {
+                const reqArray = requirements.split('\n').filter(line => line.trim() !== '');
+                reqArray.forEach((req, index) => {
+                    formData.append(`requirements[${index}]`, req);
+                });
+            }
         }
         // for client/team we don't need category but ensure image appended
         formData.append('image', currentImageFile);
@@ -662,6 +813,7 @@ function updateContent(contentType, id, data) {
         else if (contentType === 'gallery') headers['X-Category'] = data.category || 'gallery';
         else if (contentType === 'client') headers['X-Category'] = 'clients';
         else if (contentType === 'team') headers['X-Category'] = 'team';
+        else if (contentType === 'job') headers['X-Category'] = 'jobs';
 
         fetch(url, {
             method: 'PUT',
@@ -686,12 +838,51 @@ function updateContent(contentType, id, data) {
                 alert(`Error updating ${itemName}: ${error.message}`);
             });
     } else {
+        // Prepare the item data for JSON submission when updating
+        const itemData = {
+            title: document.getElementById('title').value,
+            description: document.getElementById('description').value
+        };
+
+        // Add content type specific fields
+        if (contentType === 'job') {
+            itemData.location = document.getElementById('location').value;
+            itemData.type = document.getElementById('type').value;
+            itemData.salary = document.getElementById('salary').value;
+            // Get responsibilities and requirements from the form fields
+            const responsibilities = document.getElementById('responsibilities').value;
+            const requirements = document.getElementById('requirements').value;
+
+            // Convert newline-separated responsibilities and requirements to arrays
+            if (responsibilities) {
+                itemData.responsibilities = responsibilities.split('\n').filter(line => line.trim() !== '');
+            }
+            if (requirements) {
+                itemData.requirements = requirements.split('\n').filter(line => line.trim() !== '');
+            }
+        }
+        // Client-specific fields
+        if (contentType === 'client') {
+            itemData.link = document.getElementById('link').value;
+        }
+        // Team-specific fields
+        if (contentType === 'team') {
+            // store team name in title if provided
+            if (document.getElementById('title').value) itemData.name = document.getElementById('title').value;
+            itemData.role = document.getElementById('role').value;
+            itemData.bio = document.getElementById('bio').value;
+            // Don't include description for team members since it's hidden
+        } else {
+            // For other content types, use description
+            itemData.description = document.getElementById('description').value;
+        }
+
         fetch(url, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(itemData)
         })
             .then(response => response.json())
             .then(result => {

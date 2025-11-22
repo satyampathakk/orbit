@@ -81,13 +81,20 @@
       ]
     },
     {
-      "id": 5,
-      "title": "Trainee",
-      "description": "demo job description",
-      "location": "Lucknow bbk",
+      "id": 7,
+      "title": "title",
+      "description": "desc",
+      "location": "location",
       "type": "Full-time",
-      "salary": "1LPA",
-      "requirements": []
+      "salary": "salary",
+      "requirements": [
+        "req 1",
+        "req 3"
+      ],
+      "responsibilities": [
+        "resp 1",
+        "resp 2"
+      ]
     }
   ]
 }

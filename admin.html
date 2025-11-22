@@ -177,39 +177,25 @@
                     <label for="title">Title</label>
                     <input type="text" id="title" name="title" required>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="description-group">
                     <label for="description">Description</label>
-                    <textarea id="description" name="description" rows="4" required></textarea>
+                    <textarea id="description" name="description" rows="4"></textarea>
                 </div>
                 
-                <!-- Image Upload -->
-                <div class="form-group">
+                <!-- Image Upload - Hidden for jobs -->
+                <div class="form-group" id="image-upload-group">
                     <label for="image-upload">Upload Image</label>
                     <input type="file" id="image-upload" name="image" accept="image/*">
                     <div id="image-preview" class="image-preview"></div>
                 </div>
-                
+
                 <!-- This will show the uploaded image path -->
                 <div class="form-group" id="image-path-group" style="display: none;">
                     <label for="image-path">Image Path</label>
                     <input type="text" id="image-path" name="image" readonly>
                 </div>
-                <!-- Client link -->
-                <div class="form-group" id="link-group" style="display: none;">
-                    <label for="link">Client Website (optional)</label>
-                    <input type="url" id="link" name="link">
-                </div>
 
-                <!-- Team specific fields -->
-                <div class="form-group" id="role-group" style="display: none;">
-                    <label for="role">Role / Position</label>
-                    <input type="text" id="role" name="role">
-                </div>
-                <div class="form-group" id="bio-group" style="display: none;">
-                    <label for="bio">Short Bio</label>
-                    <textarea id="bio" name="bio" rows="3"></textarea>
-                </div>
-                
+                <!-- Job specific fields -->
                 <div class="form-group" id="location-group" style="display: none;">
                     <label for="location">Location</label>
                     <input type="text" id="location" name="location">
@@ -225,6 +211,30 @@
                 <div class="form-group" id="salary-group" style="display: none;">
                     <label for="salary">Salary</label>
                     <input type="text" id="salary" name="salary">
+                </div>
+                <div class="form-group" id="responsibilities-group" style="display: none;">
+                    <label for="responsibilities">Key Responsibilities (one per line)</label>
+                    <textarea id="responsibilities" name="responsibilities" rows="4" placeholder="Enter each responsibility on a new line"></textarea>
+                </div>
+                <div class="form-group" id="requirements-group" style="display: none;">
+                    <label for="requirements">Requirements (one per line)</label>
+                    <textarea id="requirements" name="requirements" rows="4" placeholder="Enter each requirement on a new line"></textarea>
+                </div>
+
+                <!-- Client link -->
+                <div class="form-group" id="link-group" style="display: none;">
+                    <label for="link">Client Website (optional)</label>
+                    <input type="url" id="link" name="link">
+                </div>
+
+                <!-- Team specific fields -->
+                <div class="form-group" id="role-group" style="display: none;">
+                    <label for="role">Role / Position</label>
+                    <input type="text" id="role" name="role">
+                </div>
+                <div class="form-group" id="bio-group" style="display: none;">
+                    <label for="bio">Short Bio</label>
+                    <textarea id="bio" name="bio" rows="3"></textarea>
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn-primary">Save</button>
