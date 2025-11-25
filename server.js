@@ -614,6 +614,111 @@ app.delete('/api/team/:id', async (req, res) => {
     }
 });
 
+// Certificates
+const CERTIFICATES_FILE = path.join(DATA_DIR, 'certificates.json');
+
+// Update the existing ensureDirectories function to include certificates directory
+const dirs = [
+    path.join(__dirname, 'data'),
+    path.join(__dirname, 'images', 'services'),
+    path.join(__dirname, 'images', 'gallery'),
+    path.join(__dirname, 'images', 'team'),
+    path.join(__dirname, 'images', 'clients'),
+    path.join(__dirname, 'images', 'certificates'),  // Added certificates directory
+    path.join(__dirname, 'uploads')
+];
+
+dirs.forEach(dir => {
+    if (!fsSync.existsSync(dir)) {
+        fsSync.mkdirSync(dir, { recursive: true });
+    }
+});
+
+app.get('/api/certificates', async (req, res) => {
+    try {
+        const data = await readJSONFile(CERTIFICATES_FILE);
+        res.json(data);
+    } catch (error) {
+        console.error('Error reading certificates:', error);
+        res.status(500).json({ error: 'Failed to read certificates data' });
+    }
+});
+
+app.post('/api/certificates', upload.single('image'), async (req, res) => {
+    try {
+        const certsData = await readJSONFile(CERTIFICATES_FILE);
+        const certificates = certsData.certificates || [];
+
+        const newId = certificates.length > 0 ? Math.max(...certificates.map(c => c.id || 0)) + 1 : 1;
+
+        const newCert = {
+            id: newId,
+            title: req.body.title || 'Certificate',
+            description: req.body.description || '',
+            image: req.file ? `/images/certificates/${req.file.filename}` : req.body.image || '',
+            icon: req.body.icon || 'fas fa-certificate',
+            category: req.body.category || 'general',
+            issueDate: req.body.issueDate || new Date().toISOString().split('T')[0],
+            validUntil: req.body.validUntil || null
+        };
+
+        certificates.push(newCert);
+        await writeJSONFile(CERTIFICATES_FILE, { certificates });
+
+        res.json({ success: true, certificate: newCert });
+    } catch (error) {
+        console.error('Error adding certificate:', error);
+        res.status(500).json({ error: 'Failed to add certificate' });
+    }
+});
+
+app.put('/api/certificates/:id', upload.single('image'), async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const certsData = await readJSONFile(CERTIFICATES_FILE);
+        const certificates = certsData.certificates || [];
+
+        const index = certificates.findIndex(c => c.id === id);
+        if (index === -1) return res.status(404).json({ error: 'Certificate not found' });
+
+        certificates[index].title = req.body.title || certificates[index].title;
+        certificates[index].description = req.body.description || certificates[index].description;
+        certificates[index].icon = req.body.icon || certificates[index].icon;
+        certificates[index].category = req.body.category || certificates[index].category;
+        certificates[index].issueDate = req.body.issueDate || certificates[index].issueDate;
+        certificates[index].validUntil = req.body.validUntil || certificates[index].validUntil;
+
+        if (req.file) {
+            certificates[index].image = `/images/certificates/${req.file.filename}`;
+        } else if (req.body.image) {
+            certificates[index].image = req.body.image;
+        }
+
+        await writeJSONFile(CERTIFICATES_FILE, { certificates });
+        res.json({ success: true, certificate: certificates[index] });
+    } catch (error) {
+        console.error('Error updating certificate:', error);
+        res.status(500).json({ error: 'Failed to update certificate' });
+    }
+});
+
+app.delete('/api/certificates/:id', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const certsData = await readJSONFile(CERTIFICATES_FILE);
+        const certificates = certsData.certificates || [];
+
+        const newCerts = certificates.filter(c => c.id !== id);
+        if (certificates.length === newCerts.length) return res.status(404).json({ error: 'Certificate not found' });
+
+        await writeJSONFile(CERTIFICATES_FILE, { certificates: newCerts });
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting certificate:', error);
+        res.status(500).json({ error: 'Failed to delete certificate' });
+    }
+});
+
 // Static files
 app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use(express.static(path.join(__dirname, '.')));

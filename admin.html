@@ -20,6 +20,7 @@
             <button class="nav-btn" data-section="jobs">Jobs</button>
             <button class="nav-btn" data-section="clients">Clients</button>
             <button class="nav-btn" data-section="team">Team</button>
+            <button class="nav-btn" data-section="certificates">Certificates</button>
             <button class="nav-btn" data-section="company">Company Info</button>
         </nav>
         
@@ -47,6 +48,11 @@
                         <i class="fas fa-users"></i>
                         <h3 id="team-count">4</h3>
                         <p>Team Members</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-certificate"></i>
+                        <h3 id="certificates-count">0</h3>
+                        <p>Certificates</p>
                     </div>
                 </div>
                 <div class="quick-actions">
@@ -121,6 +127,16 @@
                 </div>
             </section>
             
+            <!-- Certificates Section -->
+            <section id="certificates" class="admin-section">
+                <h2>Manage Certificates</h2>
+                <button id="add-certificate-btn" class="btn-primary"><i class="fas fa-plus"></i> Add New Certificate</button>
+
+                <div class="content-list" id="certificates-list">
+                    <!-- Certificates will be loaded here -->
+                </div>
+            </section>
+
             <!-- Company Section -->
             <section id="company" class="admin-section">
                 <h2>Company Information</h2>

@@ -1,0 +1,34 @@
+{
+  "certificates": [
+    {
+      "id": 1,
+      "title": "GST ",
+      "description": "gst certificate",
+      "image": "/images/certificates/1764050859070-802576053.png",
+      "icon": "fas fa-certificate",
+      "category": "general",
+      "issueDate": "2025-11-25",
+      "validUntil": null
+    },
+    {
+      "id": 2,
+      "title": "Business",
+      "description": "b",
+      "image": "/images/certificates/1764054290683-248363157.png",
+      "icon": "fas fa-certificate",
+      "category": "general",
+      "issueDate": "2025-11-25",
+      "validUntil": null
+    },
+    {
+      "id": 3,
+      "title": "Document",
+      "description": "desc",
+      "image": "/images/certificates/1764054868001-484707103.png",
+      "icon": "fas fa-certificate",
+      "category": "general",
+      "issueDate": "2025-11-25",
+      "validUntil": null
+    }
+  ]
+}

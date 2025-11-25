@@ -2,7 +2,7 @@
   "services": [
     {
       "id": 1,
-      "title": "Transmission & Distribution",
+      "title": "Transmission ",
       "description": "Complete T&D solutions from design to commissioning with A-Class electrical license compliance and high operational standards.",
       "image": "/images/services/1763297914513-440667624.webp",
       "icon": "fas fa-bolt"
@@ -55,20 +55,6 @@
       "description": "Comprehensive energy assessments to optimize efficiency and reduce operational costs.",
       "image": "/images/services/1763298010654-769006194.jpg",
       "icon": "fas fa-chart-line"
-    },
-    {
-      "id": 9,
-      "title": "new service",
-      "description": "this is some new service that we provide and we are the best in the world",
-      "image": "/images/services/1763808250196-597447793.jpeg",
-      "icon": "fas fa-bolt"
-    },
-    {
-      "id": 10,
-      "title": "check the desc length",
-      "description": "hello everyone, my name is utkarsh awasthi , i live in barabanki and i want to live a happy life in india making and earning a lot of money and life a happy life.",
-      "image": "/images/services/1763808301380-63687239.png",
-      "icon": "fas fa-bolt"
     }
   ]
 }

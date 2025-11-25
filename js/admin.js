@@ -67,6 +67,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 case 'add-team':
                     openModal('team', null);
                     break;
+                case 'add-certificate':
+                    openModal('certificate', null);
+                    break;
             }
         });
     });
@@ -80,7 +83,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (addClientBtn) addClientBtn.addEventListener('click', () => openModal('client', null));
     const addTeamBtn = document.getElementById('add-team-btn');
     if (addTeamBtn) addTeamBtn.addEventListener('click', () => openModal('team', null));
-    
+    const addCertBtn = document.getElementById('add-certificate-btn');
+    if (addCertBtn) addCertBtn.addEventListener('click', () => openModal('certificate', null));
+
     // Company form submission
     document.getElementById('company-form').addEventListener('submit', handleCompanyFormSubmit);
 });
@@ -108,6 +113,9 @@ function loadContent(section) {
             break;
         case 'team':
             loadTeam();
+            break;
+        case 'certificates':
+            loadCertificates();
             break;
         case 'company':
             loadCompanyInfo();
@@ -181,23 +189,71 @@ function loadTeam() {
         });
 }
 
+function loadCertificates() {
+    fetch('/api/certificates')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('certificates-list');
+            container.innerHTML = '';
+
+            (data.certificates || []).forEach(cert => {
+                const item = document.createElement('div');
+                item.className = 'content-item';
+                item.innerHTML = `
+                    <div class="content-info">
+                        <h3>${cert.title || 'Untitled Certificate'}</h3>
+                        <p>${cert.description || ''}</p>
+                    </div>
+                    <div class="content-actions">
+                        <button class="btn-secondary" onclick="openModal('certificate', ${cert.id})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn-danger" onclick="deleteCertificate(${cert.id})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading certificates:', error);
+            document.getElementById('certificates-list').innerHTML = '<p>Error loading certificates. Check console for details.</p>';
+        });
+}
+
 function loadDashboardStats() {
     // Load actual data counts
     loadData('./data/services.json').then(data => {
         document.getElementById('services-count').textContent = data.services.length;
     }).catch(() => document.getElementById('services-count').textContent = '0');
-    
+
     loadData('./data/gallery.json').then(data => {
         document.getElementById('gallery-count').textContent = data.gallery.length;
     }).catch(() => document.getElementById('gallery-count').textContent = '0');
-    
+
     loadData('./data/jobs.json').then(data => {
         document.getElementById('jobs-count').textContent = data.jobs.length;
     }).catch(() => document.getElementById('jobs-count').textContent = '0');
-    
+
     loadData('./data/company.json').then(data => {
         document.getElementById('team-count').textContent = data.team.length;
     }).catch(() => document.getElementById('team-count').textContent = '0');
+
+    // Load certificates count
+    loadData('./data/certificates.json').then(data => {
+        const certCount = (data.certificates || []).length;
+        // Add certificates count to dashboard if the element exists
+        const certCountElement = document.getElementById('certificates-count');
+        if (certCountElement) {
+            certCountElement.textContent = certCount;
+        }
+    }).catch(() => {
+        const certCountElement = document.getElementById('certificates-count');
+        if (certCountElement) {
+            certCountElement.textContent = '0';
+        }
+    });
 }
 
 function loadServices() {
@@ -382,6 +438,10 @@ function openModal(contentType, id = null) {
         descriptionGroup.style.display = 'none'; // Hide description for team - use bio instead
         if (roleGroup) roleGroup.style.display = 'block';
         if (bioGroup) bioGroup.style.display = 'block';
+    } else if (contentType === 'certificate') {
+        imageUploadGroup.style.display = 'block';
+        descriptionGroup.style.display = 'block';
+        // Additional certificate-specific fields would go here
     } else { // service
         imageUploadGroup.style.display = 'block';
     }
@@ -418,6 +478,9 @@ function loadContentForEdit(contentType, id) {
             break;
         case 'team':
             promise = loadData('./data/team.json').then(data => (data.team || []).find(item => item.id == id));
+            break;
+        case 'certificate':
+            promise = loadData('./data/certificates.json').then(data => (data.certificates || []).find(item => item.id == id));
             break;
     }
     
@@ -578,10 +641,14 @@ function addNewContent(contentType, data) {
             url = '/api/team';
             itemName = 'Team Member';
             break;
+        case 'certificate':
+            url = '/api/certificates';
+            itemName = 'Certificate';
+            break;
     }
 
     // If a file was selected in the modal, send as multipart/form-data so the server can store the image
-    if (currentImageFile && (contentType === 'service' || contentType === 'gallery' || contentType === 'client' || contentType === 'team')) {
+    if (currentImageFile && (contentType === 'service' || contentType === 'gallery' || contentType === 'client' || contentType === 'team' || contentType === 'certificate')) {
         const formData = new FormData();
         formData.append('title', data.title || '');
         formData.append('description', data.description || '');
@@ -636,6 +703,7 @@ function addNewContent(contentType, data) {
         else if (contentType === 'gallery') headers['X-Category'] = data.category || 'gallery';
         else if (contentType === 'client') headers['X-Category'] = 'clients';
         else if (contentType === 'team') headers['X-Category'] = 'team';
+        else if (contentType === 'certificate') headers['X-Category'] = 'certificates';
         else if (contentType === 'job') headers['X-Category'] = 'jobs';
 
         fetch(url, {
@@ -717,6 +785,7 @@ function addNewContent(contentType, data) {
                     else if (contentType === 'job') loadContent('jobs');
                     else if (contentType === 'client') loadContent('clients');
                     else if (contentType === 'team') loadContent('team');
+                    else if (contentType === 'certificate') loadContent('certificates');
                     else loadContent('services');
                 } else {
                     alert(`Error adding ${itemName}: ${result.error || 'Unknown error'}`);
@@ -754,10 +823,14 @@ function updateContent(contentType, id, data) {
             url = `/api/team/${id}`;
             itemName = 'Team Member';
             break;
+        case 'certificate':
+            url = `/api/certificates/${id}`;
+            itemName = 'Certificate';
+            break;
     }
 
     // If a new file was selected, send as multipart/form-data so the server can store the image
-    if (currentImageFile && (contentType === 'service' || contentType === 'gallery' || contentType === 'client' || contentType === 'team')) {
+    if (currentImageFile && (contentType === 'service' || contentType === 'gallery' || contentType === 'client' || contentType === 'team' || contentType === 'certificate')) {
         const formData = new FormData();
         formData.append('title', data.title || '');
         formData.append('description', data.description || '');
@@ -813,6 +886,7 @@ function updateContent(contentType, id, data) {
         else if (contentType === 'gallery') headers['X-Category'] = data.category || 'gallery';
         else if (contentType === 'client') headers['X-Category'] = 'clients';
         else if (contentType === 'team') headers['X-Category'] = 'team';
+        else if (contentType === 'certificate') headers['X-Category'] = 'certificates';
         else if (contentType === 'job') headers['X-Category'] = 'jobs';
 
         fetch(url, {
@@ -828,6 +902,7 @@ function updateContent(contentType, id, data) {
                     else if (contentType === 'job') loadContent('jobs');
                     else if (contentType === 'client') loadContent('clients');
                     else if (contentType === 'team') loadContent('team');
+                    else if (contentType === 'certificate') loadContent('certificates');
                     else loadContent('services');
                 } else {
                     alert(`Error updating ${itemName}: ${result.error || 'Unknown error'}`);
@@ -892,6 +967,7 @@ function updateContent(contentType, id, data) {
                     else if (contentType === 'job') loadContent('jobs');
                     else if (contentType === 'client') loadContent('clients');
                     else if (contentType === 'team') loadContent('team');
+                    else if (contentType === 'certificate') loadContent('certificates');
                     else loadContent('services');
                 } else {
                     alert(`Error updating ${itemName}: ${result.error || 'Unknown error'}`);
@@ -1006,6 +1082,27 @@ function deleteTeamMember(id) {
         .catch(error => {
             console.error('Error deleting team member:', error);
             alert('Error deleting team member');
+        });
+}
+
+function deleteCertificate(id) {
+    if (!confirm('Are you sure you want to delete this certificate?')) return;
+
+    fetch(`/api/certificates/${id}`, {
+        method: 'DELETE'
+    })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                alert('Certificate deleted successfully!');
+                loadCertificates();
+            } else {
+                alert(`Error deleting certificate: ${result.error || 'Unknown error'}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting certificate:', error);
+            alert('Error deleting certificate');
         });
 }
 

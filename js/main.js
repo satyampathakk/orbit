@@ -21,6 +21,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (document.querySelector('.team-grid')) {
         loadTeamFront();
     }
+    // Load certificates if on main page
+    if (document.getElementById('certificates')) {
+        loadCertificatesFront();
+    }
     
     // Load jobs if on careers page
     if (document.getElementById('careers') || window.location.pathname.includes('careers')) {
@@ -130,6 +134,10 @@ function getDemoData(url) {
                 }
             },
             "team": []
+        };
+    } else if (url.includes('certificates.json')) {
+        return {
+            "certificates": []
         };
     }
 
@@ -287,23 +295,30 @@ function loadClientsFront() {
             grid.innerHTML = '';
 
             clients.forEach(c => {
-                const el = document.createElement('div');
-                el.className = 'client-logo';
-                el.innerHTML = `
-                    ${c.image ? `<img src="${c.image}" alt="${c.title || c.name}" />` : '<i class="fas fa-industry fa-3x"></i>'}
-                    <p>${c.title || c.name || ''}</p>
-                `;
-                // If a link exists, wrap image/text in anchor
-                if (c.link) {
-                    const a = document.createElement('a');
-                    a.href = c.link;
-                    a.target = '_blank';
-                    a.rel = 'noopener noreferrer';
-                    a.appendChild(el.cloneNode(true));
-                    grid.appendChild(a);
-                } else {
-                    grid.appendChild(el);
+                // Create either an anchor (if link provided) or a div for the grid item
+                const hasLink = !!c.link;
+                const item = hasLink ? document.createElement('a') : document.createElement('div');
+
+                if (hasLink) {
+                    item.href = c.link;
+                    item.target = '_blank';
+                    item.rel = 'noopener noreferrer';
                 }
+
+                item.className = 'client-logo';
+
+                if (c.image) {
+                    const img = document.createElement('img');
+                    img.src = c.image;
+                    img.alt = c.title || c.name || 'Client logo';
+                    item.appendChild(img);
+                } else {
+                    const icon = document.createElement('i');
+                    icon.className = 'fas fa-industry fa-2x';
+                    item.appendChild(icon);
+                }
+
+                grid.appendChild(item);
             });
         })
         .catch(err => console.error('Error loading clients front:', err));
@@ -367,6 +382,53 @@ function updateTeamMembers(team) {
         }
 
         teamGrid.appendChild(memberCard);
+    });
+}
+
+// Load certificates for the public site
+function loadCertificatesFront() {
+    fetch('/api/certificates')
+        .then(resp => {
+            if (!resp.ok) throw new Error('Network response not ok');
+            return resp.json();
+        })
+        .catch(() => loadData('./data/certificates.json'))
+        .then(data => {
+            const certificates = data.certificates || data || [];
+            updateCertificatesGrid(certificates);
+        })
+        .catch(err => console.error('Error loading certificates front:', err));
+}
+
+function updateCertificatesGrid(certificates) {
+    const grid = document.getElementById('certificates-grid');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+
+    certificates.forEach(cert => {
+        const certCard = document.createElement('div');
+        certCard.className = 'certificate-card';
+
+        // Determine if it's a PDF or image file to show appropriate styling
+        const isPdf = cert.image && cert.image.toLowerCase().endsWith('.pdf');
+        if (isPdf) {
+            certCard.classList.add('pdf');
+        }
+
+        // Create the certificate card HTML
+        certCard.innerHTML = `
+            <h4 class="certificate-title">${cert.title || 'Certificate'}</h4>
+
+            <div class="certificate-image-container">
+                ${isPdf ?
+                    `<img src="/images/icons/pdf-icon.svg" alt="PDF Document" class="certificate-image" />` :
+                    `<img src="${cert.image || '/images/icons/document-icon.svg'}" alt="${cert.title || 'Certificate'}" class="certificate-image" />`
+                }
+            </div>
+        `;
+
+        grid.appendChild(certCard);
     });
 }
 
