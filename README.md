@@ -4,6 +4,7 @@
 - [Project Overview](#project-overview)
 - [Installation](#installation)
 - [Running the Application](#running-the-application)
+- [Docker Deployment](#docker-deployment)
 - [Features](#features)
 - [Project Structure](#project-structure)
 - [Available API Endpoints](#available-api-endpoints)
@@ -103,6 +104,73 @@ PORT=4000 npm start
 ```
 
 Once running, the server will display available endpoints in the console.
+
+---
+
+## 🐳 Docker Deployment
+
+### Quick Start with Docker
+
+**Using the start script (recommended):**
+```bash
+# Windows
+docker-start.bat
+
+# Linux/Mac
+./docker-start.sh
+```
+
+**Manual deployment:**
+```bash
+# Build and start all containers
+docker-compose up -d --build
+
+# Access the website
+# Frontend: http://localhost
+# Admin Panel: http://localhost/admin.html
+# API: http://localhost:3000/api
+```
+
+### Docker Architecture
+
+The Docker setup includes:
+- **Nginx Container**: Serves static frontend files and proxies API requests
+- **Node.js Container**: Runs the Express backend API
+- **Docker Network**: Internal network for container communication
+- **Persistent Volumes**: Data, images, and uploads persist across restarts
+
+### Docker Commands
+
+```bash
+# View logs
+docker-compose logs -f
+
+# Stop containers
+docker-compose down
+
+# Restart containers
+docker-compose restart
+
+# View container status
+docker-compose ps
+
+# Rebuild after changes
+docker-compose up -d --build
+```
+
+### Development with Docker
+
+For development with hot-reload:
+```bash
+docker-compose -f docker-compose.dev.yml up -d
+```
+
+**📚 See [DOCKER_GUIDE.md](DOCKER_GUIDE.md) for complete Docker documentation including:**
+- Production deployment
+- SSL/HTTPS setup
+- Scaling and performance
+- Troubleshooting
+- Backup and restore
 
 ---
 
