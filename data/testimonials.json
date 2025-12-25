@@ -1,0 +1,28 @@
+{
+  "testimonials": [
+    {
+      "id": 1,
+      "clientName": "client name",
+      "position": "pos/comp",
+      "rating": 5,
+      "image": "/images/testimonials/1764065259910-67632442.png",
+      "company": "pos/comp"
+    },
+    {
+      "id": 2,
+      "clientName": "client name",
+      "position": "Bytebruder",
+      "rating": 3,
+      "image": "/images/testimonials/1764066576252-768605221.webp",
+      "company": "Bytebruder"
+    },
+    {
+      "id": 4,
+      "clientName": "Utkarsh",
+      "position": "Bytebruder",
+      "rating": 5,
+      "image": "/images/testimonials/1765093306889-580241635.jpg",
+      "company": "Bytebruder"
+    }
+  ]
+}

@@ -5,7 +5,9 @@
       "name": "utkarsh",
       "role": "role/pos",
       "bio": "short bio",
-      "image": "/images/team/1763300302530-741640343.jpg"
+      "image": "/images/team/1763300302530-741640343.jpg",
+      "title": "utkarsh",
+      "description": "short bio"
     },
     {
       "id": 7,

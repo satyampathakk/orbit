@@ -31,6 +31,19 @@ body {
     margin: 0;
 }
 
+.auth-status {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    font-size: 0.95rem;
+}
+
+.logout-btn {
+    padding: 0.5rem 1rem;
+}
+
 .admin-nav {
     background-color: white;
     padding: 1rem;
@@ -69,6 +82,10 @@ body {
 
 .admin-section.active {
     display: block;
+}
+
+.requires-auth.locked {
+    display: none !important;
 }
 
 .admin-section h2 {
@@ -315,6 +332,61 @@ body {
     max-height: calc(100vh - 80px);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+}
+
+/* Login overlay */
+.login-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1500;
+    padding: 1rem;
+}
+
+.login-card {
+    background: white;
+    width: 100%;
+    max-width: 420px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    padding: 2rem;
+    text-align: left;
+}
+
+.login-card h2 {
+    margin-bottom: 0.5rem;
+    color: #102A43;
+}
+
+.muted {
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+
+.login-form .form-group label {
+    color: #102A43;
+}
+
+.login-form .form-group input {
+    border: 1px solid #d1d9e0;
+}
+
+.error-text {
+    color: #dc3545;
+    min-height: 1.2rem;
+    margin-top: 0.5rem;
+}
+
+.full-width {
+    width: 100%;
+    justify-content: center;
+}
+
+.login-overlay.hidden {
+    display: none;
 }
 
 @keyframes modalSlideIn {

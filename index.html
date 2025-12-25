@@ -113,43 +113,8 @@
         <div class="container">
             <h2>Client Testimonials</h2>
             <p>What our clients say about our services</p>
-            <div class="testimonials-grid">
-                <div class="testimonial-card">
-                    <div class="rating">
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                    </div>
-                    <p>"Orbit Power delivered exceptional services with high reliability and prompt action during our substation project. Their professionalism is unmatched."</p>
-                    <h4>Rajesh Kumar</h4>
-                    <p>VP Engineering, Power Grid Corp</p>
-                </div>
-                <div class="testimonial-card">
-                    <div class="rating">
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                    </div>
-                    <p>"Quality and professionalism are the hallmarks of Orbit Power. Their team completed our T&D project with zero safety incidents and ahead of schedule."</p>
-                    <h4>Priya Sharma</h4>
-                    <p>Operations Head, NTPC</p>
-                </div>
-                <div class="testimonial-card">
-                    <div class="rating">
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                    </div>
-                    <p>"The managed services team from Orbit Power has maintained our electrical infrastructure with outstanding quality and reliability, allowing us to focus on our core business."</p>
-                    <h4>Amit Patel</h4>
-                    <p>Facilities Director, Tata Power</p>
-                </div>
+            <div class="testimonials-grid" id="testimonials-grid">
+                <!-- Testimonials will be loaded dynamically -->
             </div>
         </div>
     </section>
@@ -164,6 +129,10 @@
                     <h2>Loading...</h2>
                     <p>Loading company overview...</p>
                     <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number">...</div>
+                            <div class="stat-label">Loading</div>
+                        </div>
                         <div class="stat-card">
                             <div class="stat-number">...</div>
                             <div class="stat-label">Loading</div>
@@ -359,6 +328,7 @@
         </div>
     </footer>
 
+    <script src="js/utils.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>

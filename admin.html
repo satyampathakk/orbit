@@ -11,9 +11,32 @@
     <div class="admin-container">
         <header class="admin-header">
             <h1><i class="fas fa-cog"></i> Orbit Power Admin Panel</h1>
+            <div class="auth-status">
+                <span id="auth-state-text">Not authenticated</span>
+                <button id="logout-btn" class="btn-secondary logout-btn" style="display: none;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
         </header>
+
+        <div id="login-overlay" class="login-overlay">
+            <div class="login-card">
+                <h2><i class="fas fa-lock"></i> Admin Login</h2>
+                <p class="muted">Please log in to manage site content.</p>
+                <form id="login-form" class="login-form">
+                    <div class="form-group">
+                        <label for="login-username">Username</label>
+                        <input type="text" id="login-username" name="username" autocomplete="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" name="password" autocomplete="current-password" required>
+                    </div>
+                    <button type="submit" class="btn-primary full-width"><i class="fas fa-sign-in-alt"></i> Log In</button>
+                    <p id="login-error" class="error-text" aria-live="polite"></p>
+                </form>
+            </div>
+        </div>
         
-        <nav class="admin-nav">
+        <nav class="admin-nav requires-auth">
             <button class="nav-btn active" data-section="dashboard">Dashboard</button>
             <button class="nav-btn" data-section="services">Services</button>
             <button class="nav-btn" data-section="gallery">Gallery</button>
@@ -21,10 +44,11 @@
             <button class="nav-btn" data-section="clients">Clients</button>
             <button class="nav-btn" data-section="team">Team</button>
             <button class="nav-btn" data-section="certificates">Certificates</button>
+            <button class="nav-btn" data-section="testimonials">Testimonials</button>
             <button class="nav-btn" data-section="company">Company Info</button>
         </nav>
         
-        <main class="admin-main">
+        <main class="admin-main requires-auth">
             <!-- Dashboard Section -->
             <section id="dashboard" class="admin-section active">
                 <h2>Dashboard</h2>
@@ -53,6 +77,11 @@
                         <i class="fas fa-certificate"></i>
                         <h3 id="certificates-count">0</h3>
                         <p>Certificates</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-comments"></i>
+                        <h3 id="testimonials-count">0</h3>
+                        <p>Testimonials</p>
                     </div>
                 </div>
                 <div class="quick-actions">
@@ -137,6 +166,16 @@
                 </div>
             </section>
 
+            <!-- Testimonials Section -->
+            <section id="testimonials" class="admin-section">
+                <h2>Manage Testimonials</h2>
+                <button id="add-testimonial-btn" class="btn-primary"><i class="fas fa-plus"></i> Add New Testimonial</button>
+
+                <div class="content-list" id="testimonials-list">
+                    <!-- Testimonials will be loaded here -->
+                </div>
+            </section>
+
             <!-- Company Section -->
             <section id="company" class="admin-section">
                 <h2>Company Information</h2>
@@ -173,10 +212,6 @@
                         <label for="mission">Mission Statement</label>
                         <textarea id="mission" name="mission" rows="3"></textarea>
                     </div>
-                    <div class="form-group">
-                        <label for="values">Values (separate with commas)</label>
-                        <textarea id="values" name="values" rows="3"></textarea>
-                    </div>
                     <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Save Changes</button>
                 </form>
             </section>
@@ -189,7 +224,7 @@
             <span class="close">&times;</span>
             <h2 id="modal-title">Add New Item</h2>
             <form id="content-form">
-                <div class="form-group">
+                <div class="form-group" id="title-group">
                     <label for="title">Title</label>
                     <input type="text" id="title" name="title" required>
                 </div>
@@ -252,6 +287,20 @@
                     <label for="bio">Short Bio</label>
                     <textarea id="bio" name="bio" rows="3"></textarea>
                 </div>
+
+                <!-- Testimonial specific fields -->
+                <div class="form-group" id="rating-group" style="display: none;">
+                    <label for="rating">Rating (1-5)</label>
+                    <input type="number" id="rating" name="rating" min="1" max="5" value="5">
+                </div>
+                <div class="form-group" id="client-name-group" style="display: none;">
+                    <label for="client-name">Client Name</label>
+                    <input type="text" id="client-name" name="clientName">
+                </div>
+                <div class="form-group" id="position-group" style="display: none;">
+                    <label for="position">Position/Company</label>
+                    <input type="text" id="position" name="position">
+                </div>
                 <div class="form-actions">
                     <button type="submit" class="btn-primary">Save</button>
                     <button type="button" class="btn-secondary cancel-btn">Cancel</button>
@@ -260,6 +309,7 @@
         </div>
     </div>
     
+    <script src="js/utils.js"></script>
     <script src="js/admin.js"></script>
 </body>
 </html>

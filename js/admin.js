@@ -1,33 +1,26 @@
-// Admin panel functionality with real data integration
+// Admin panel functionality with auth gating
 document.addEventListener('DOMContentLoaded', function() {
-    // Navigation
     const navBtns = document.querySelectorAll('.nav-btn');
     const sections = document.querySelectorAll('.admin-section');
-    
-    navBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            // Update active button
-            navBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            // Show corresponding section
-            sections.forEach(s => s.classList.remove('active'));
-            document.getElementById(btn.dataset.section).classList.add('active');
-            
-            // Load content based on section
-            loadContent(btn.dataset.section);
-        });
-    });
-    
-    // Initialize dashboard
-    loadContent('dashboard');
-    
-    // Modal functionality
     const modal = document.getElementById('content-modal');
     const closeBtn = document.querySelector('.close');
     const cancelBtn = document.querySelector('.cancel-btn');
     const contentForm = document.getElementById('content-form');
-    
+    const imageUpload = document.getElementById('image-upload');
+    const loginForm = document.getElementById('login-form');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    navBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (!ensureAuthenticated('Please log in to access the admin panel.')) return;
+            navBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            sections.forEach(s => s.classList.remove('active'));
+            document.getElementById(btn.dataset.section).classList.add('active');
+            loadContent(btn.dataset.section);
+        });
+    });
+
     closeBtn.addEventListener('click', closeModal);
     cancelBtn.addEventListener('click', closeModal);
     window.addEventListener('click', (e) => {
@@ -35,21 +28,18 @@ document.addEventListener('DOMContentLoaded', function() {
             closeModal();
         }
     });
-    
-    // Form submission
+
     contentForm.addEventListener('submit', handleFormSubmit);
-    
-    // Add image upload functionality
-    const imageUpload = document.getElementById('image-upload');
+
     if (imageUpload) {
         imageUpload.addEventListener('change', function(e) {
             handleImageUpload(e.target.files[0]);
         });
     }
-    
-    // Quick action buttons
+
     document.querySelectorAll('.action-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+            if (!ensureAuthenticated('Please log in to add content.')) return;
             const action = btn.dataset.action;
             switch(action) {
                 case 'add-service':
@@ -70,31 +60,164 @@ document.addEventListener('DOMContentLoaded', function() {
                 case 'add-certificate':
                     openModal('certificate', null);
                     break;
+                case 'add-testimonial':
+                    openModal('testimonial', null);
+                    break;
             }
         });
     });
-    
-    // Add content buttons
-    document.getElementById('add-service-btn').addEventListener('click', () => openModal('service', null));
-    document.getElementById('add-gallery-btn').addEventListener('click', () => openModal('gallery', null));
-    document.getElementById('add-job-btn').addEventListener('click', () => openModal('job', null));
-    // New add buttons for clients and team (may not exist on every page load)
-    const addClientBtn = document.getElementById('add-client-btn');
-    if (addClientBtn) addClientBtn.addEventListener('click', () => openModal('client', null));
-    const addTeamBtn = document.getElementById('add-team-btn');
-    if (addTeamBtn) addTeamBtn.addEventListener('click', () => openModal('team', null));
-    const addCertBtn = document.getElementById('add-certificate-btn');
-    if (addCertBtn) addCertBtn.addEventListener('click', () => openModal('certificate', null));
 
-    // Company form submission
+    document.getElementById('add-service-btn').addEventListener('click', () => { if (ensureAuthenticated()) openModal('service', null); });
+    document.getElementById('add-gallery-btn').addEventListener('click', () => { if (ensureAuthenticated()) openModal('gallery', null); });
+    document.getElementById('add-job-btn').addEventListener('click', () => { if (ensureAuthenticated()) openModal('job', null); });
+    const addClientBtn = document.getElementById('add-client-btn');
+    if (addClientBtn) addClientBtn.addEventListener('click', () => { if (ensureAuthenticated()) openModal('client', null); });
+    const addTeamBtn = document.getElementById('add-team-btn');
+    if (addTeamBtn) addTeamBtn.addEventListener('click', () => { if (ensureAuthenticated()) openModal('team', null); });
+    const addCertBtn = document.getElementById('add-certificate-btn');
+    if (addCertBtn) addCertBtn.addEventListener('click', () => { if (ensureAuthenticated()) openModal('certificate', null); });
+    const addTestimonialBtn = document.getElementById('add-testimonial-btn');
+    if (addTestimonialBtn) addTestimonialBtn.addEventListener('click', () => { if (ensureAuthenticated()) openModal('testimonial', null); });
+
     document.getElementById('company-form').addEventListener('submit', handleCompanyFormSubmit);
+    loginForm.addEventListener('submit', handleLoginSubmit);
+    logoutBtn.addEventListener('click', handleLogout);
+
+    bootstrapAuth();
 });
 
 let currentEditing = null;
 let currentContentType = null;
 let currentImageFile = null;
+let authToken = localStorage.getItem('authToken') || null;
+let isAuthenticated = false;
+
+function setLoginError(message = '') {
+    const errorEl = document.getElementById('login-error');
+    if (errorEl) errorEl.textContent = message;
+}
+
+function setAuthState(authenticated, message = '') {
+    isAuthenticated = authenticated;
+    const overlay = document.getElementById('login-overlay');
+    const statusText = document.getElementById('auth-state-text');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    document.querySelectorAll('.requires-auth').forEach(el => {
+        el.classList.toggle('locked', !authenticated);
+    });
+
+    if (overlay) overlay.classList.toggle('hidden', authenticated);
+    if (statusText) statusText.textContent = authenticated ? 'Authenticated' : 'Not authenticated';
+    if (logoutBtn) logoutBtn.style.display = authenticated ? 'inline-flex' : 'none';
+
+    if (!authenticated && message) {
+        setLoginError(message);
+    } else if (authenticated) {
+        setLoginError('');
+    }
+}
+
+function clearAuth() {
+    authToken = null;
+    localStorage.removeItem('authToken');
+}
+
+function ensureAuthenticated(message) {
+    if (!isAuthenticated) {
+        setAuthState(false, message || 'Please log in to continue.');
+        return false;
+    }
+    return true;
+}
+
+function getAuthHeaders(headers = {}) {
+    const merged = { ...headers };
+    if (authToken) merged['Authorization'] = `Bearer ${authToken}`;
+    return merged;
+}
+
+async function authorizedFetch(url, options = {}) {
+    const opts = { ...options };
+    opts.headers = getAuthHeaders(options.headers || {});
+    const res = await fetch(url, opts);
+    if (res.status === 401) {
+        clearAuth();
+        setAuthState(false, 'Session expired. Please log in again.');
+        throw new Error('Unauthorized');
+    }
+    return res;
+}
+
+async function handleLoginSubmit(e) {
+    e.preventDefault();
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value.trim();
+
+    try {
+        setLoginError('');
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+
+        if (!res.ok) {
+            throw new Error('Invalid credentials');
+        }
+
+        const data = await res.json();
+        authToken = data.token;
+        localStorage.setItem('authToken', authToken);
+        setAuthState(true);
+        // Default to dashboard on login
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        const dashboardBtn = document.querySelector('.nav-btn[data-section="dashboard"]');
+        if (dashboardBtn) dashboardBtn.classList.add('active');
+        document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+        const dashSection = document.getElementById('dashboard');
+        if (dashSection) dashSection.classList.add('active');
+        loadContent('dashboard');
+    } catch (error) {
+        console.error('Login failed:', error);
+        setLoginError(error.message || 'Login failed. Please try again.');
+    }
+}
+
+async function handleLogout(e) {
+    if (e) e.preventDefault();
+    try {
+        if (authToken) {
+            await authorizedFetch('/api/auth/logout', { method: 'POST' });
+        }
+    } catch (error) {
+        console.error('Logout failed:', error);
+    } finally {
+        clearAuth();
+        setAuthState(false);
+    }
+}
+
+async function bootstrapAuth() {
+    if (!authToken) {
+        setAuthState(false);
+        return;
+    }
+
+    try {
+        const res = await authorizedFetch('/api/auth/status');
+        if (!res.ok) throw new Error('Unauthorized');
+        setAuthState(true);
+        loadContent('dashboard');
+    } catch (error) {
+        console.error('Auth check failed:', error);
+        clearAuth();
+        setAuthState(false, 'Please log in to continue.');
+    }
+}
 
 function loadContent(section) {
+    if (!ensureAuthenticated()) return;
     switch(section) {
         case 'dashboard':
             loadDashboardStats();
@@ -116,6 +239,9 @@ function loadContent(section) {
             break;
         case 'certificates':
             loadCertificates();
+            break;
+        case 'testimonials':
+            loadTestimonials();
             break;
         case 'company':
             loadCompanyInfo();
@@ -222,6 +348,39 @@ function loadCertificates() {
         });
 }
 
+function loadTestimonials() {
+    fetch('/api/testimonials')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('testimonials-list');
+            container.innerHTML = '';
+
+            (data.testimonials || []).forEach(testimonial => {
+                const item = document.createElement('div');
+                item.className = 'content-item';
+                item.innerHTML = `
+                    <div class="content-info">
+                        <h3>${testimonial.clientName || 'Unnamed Client'}</h3>
+                        <p>${testimonial.position || testimonial.company || ''}</p>
+                    </div>
+                    <div class="content-actions">
+                        <button class="btn-secondary" onclick="openModal('testimonial', ${testimonial.id})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn-danger" onclick="deleteTestimonial(${testimonial.id})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading testimonials:', error);
+            document.getElementById('testimonials-list').innerHTML = '<p>Error loading testimonials. Check console for details.</p>';
+        });
+}
+
 function loadDashboardStats() {
     // Load actual data counts
     loadData('./data/services.json').then(data => {
@@ -252,6 +411,21 @@ function loadDashboardStats() {
         const certCountElement = document.getElementById('certificates-count');
         if (certCountElement) {
             certCountElement.textContent = '0';
+        }
+    });
+
+    // Load testimonials count
+    loadData('./data/testimonials.json').then(data => {
+        const testimonialCount = (data.testimonials || []).length;
+        // Add testimonials count to dashboard if the element exists
+        const testimonialCountElement = document.getElementById('testimonials-count');
+        if (testimonialCountElement) {
+            testimonialCountElement.textContent = testimonialCount;
+        }
+    }).catch(() => {
+        const testimonialCountElement = document.getElementById('testimonials-count');
+        if (testimonialCountElement) {
+            testimonialCountElement.textContent = '0';
         }
     });
 }
@@ -365,11 +539,10 @@ function loadCompanyInfo() {
             document.getElementById('founded').value = company.founded || '';
             document.getElementById('employees').value = company.employees || '';
             document.getElementById('projects').value = company.projects || '';
+            const statesField = document.getElementById('states-covered');
+            if (statesField) statesField.value = company.statesCovered || '';
             document.getElementById('mission').value = company.mission || '';
 
-            // Convert array to comma-separated string for values field
-            document.getElementById('values').value = Array.isArray(company.values) ?
-                company.values.join(', ') : '';
         })
         .catch(error => {
             console.error('Error loading company info:', error);
@@ -442,8 +615,30 @@ function openModal(contentType, id = null) {
         imageUploadGroup.style.display = 'block';
         descriptionGroup.style.display = 'block';
         // Additional certificate-specific fields would go here
+    } else if (contentType === 'testimonial') {
+        imageUploadGroup.style.display = 'block';
+        descriptionGroup.style.display = 'none'; // Hide main description for testimonials
+        // Show testimonial-specific fields
+        document.getElementById('rating-group').style.display = 'block';
+        document.getElementById('client-name-group').style.display = 'block';
+        document.getElementById('position-group').style.display = 'block';
+        // Hide the title field for testimonials since we use client-name instead
+        document.getElementById('title-group').style.display = 'none';
+
+        // For testimonials, make client name required and title not required
+        document.getElementById('client-name').required = true;
+        document.getElementById('title').required = false;
     } else { // service
         imageUploadGroup.style.display = 'block';
+        // Make sure testimonial fields are hidden for other content types
+        document.getElementById('rating-group').style.display = 'none';
+        document.getElementById('client-name-group').style.display = 'none';
+        document.getElementById('position-group').style.display = 'none';
+        document.getElementById('title-group').style.display = 'block'; // Show title for other content types
+
+        // Reset required attributes for other content types
+        document.getElementById('client-name').required = false;
+        document.getElementById('title').required = true;
     }
     
     if (id) {
@@ -482,6 +677,9 @@ function loadContentForEdit(contentType, id) {
         case 'certificate':
             promise = loadData('./data/certificates.json').then(data => (data.certificates || []).find(item => item.id == id));
             break;
+        case 'testimonial':
+            promise = loadData('./data/testimonials.json').then(data => (data.testimonials || []).find(item => item.id == id));
+            break;
     }
     
     promise.then(item => {
@@ -490,16 +688,17 @@ function loadContentForEdit(contentType, id) {
             return;
         }
         
+        // Always update the form fields regardless of visibility
         document.getElementById('title').value = item.title || item.name || '';
         document.getElementById('description').value = item.description || item.bio || '';
-        
+
         if (item.image) {
             const preview = document.getElementById('image-preview');
             preview.innerHTML = `<img src="${item.image}" alt="Current image" style="max-width: 100%; max-height: 150px;">`;
             document.getElementById('image-path').value = item.image;
             document.getElementById('image-path-group').style.display = 'block';
         }
-        
+
         if (contentType === 'job') {
             document.getElementById('location').value = item.location || '';
             document.getElementById('type').value = item.type || 'Full-time';
@@ -515,6 +714,12 @@ function loadContentForEdit(contentType, id) {
             document.getElementById('role').value = item.role || '';
             document.getElementById('bio').value = item.bio || '';
             // Don't populate description for team members since it's hidden
+        } else if (contentType === 'testimonial') {
+            // For testimonials, populate specific fields
+            document.getElementById('client-name').value = item.clientName || item.name || '';
+            document.getElementById('position').value = item.position || item.company || '';
+            document.getElementById('rating').value = item.rating || 5;
+            // Don't populate title or description for testimonials
         } else {
             // For other content types, populate description
             document.getElementById('description').value = item.description || '';
@@ -548,6 +753,20 @@ function handleFormSubmit(e) {
 
         itemData = {
             title: data.title
+        };
+    }
+    // For testimonials, we use client name, position and rating; no title or description needed
+    else if (currentContentType === 'testimonial') {
+        // Validate required fields for testimonials
+        if (!document.getElementById('client-name').value || document.getElementById('client-name').value.trim() === '') {
+            alert('Client name is required for testimonials.');
+            return;
+        }
+
+        itemData = {
+            clientName: document.getElementById('client-name').value,
+            position: document.getElementById('position').value,
+            rating: parseInt(document.getElementById('rating').value) || 5
         };
     } else {
         // Validate required fields for other content types
@@ -603,21 +822,24 @@ function handleFormSubmit(e) {
         // Use bio field for team members instead of description
         itemData.bio = document.getElementById('bio').value;
         // Don't include description for team members since it's hidden
-    } else {
-        // For other content types, use description
+    }
+    // Testimonial-specific fields were already handled above
+    else if (currentContentType !== 'testimonial') {
+        // For other content types (not testimonials), use description
         itemData.description = data.description;
     }
-    
+
     if (currentEditing) {
         updateContent(currentContentType, currentEditing, itemData);
     } else {
         addNewContent(currentContentType, itemData);
     }
-    
+
     closeModal();
 }
 
 function addNewContent(contentType, data) {
+    if (!ensureAuthenticated('Please log in to add content.')) return;
     let url, itemName;
 
     switch(contentType) {
@@ -645,10 +867,14 @@ function addNewContent(contentType, data) {
             url = '/api/certificates';
             itemName = 'Certificate';
             break;
+        case 'testimonial':
+            url = '/api/testimonials';
+            itemName = 'Testimonial';
+            break;
     }
 
     // If a file was selected in the modal, send as multipart/form-data so the server can store the image
-    if (currentImageFile && (contentType === 'service' || contentType === 'gallery' || contentType === 'client' || contentType === 'team' || contentType === 'certificate')) {
+    if (currentImageFile && (contentType === 'service' || contentType === 'gallery' || contentType === 'client' || contentType === 'team' || contentType === 'certificate' || contentType === 'testimonial')) {
         const formData = new FormData();
         formData.append('title', data.title || '');
         formData.append('description', data.description || '');
@@ -693,6 +919,12 @@ function addNewContent(contentType, data) {
                 });
             }
         }
+        // Add testimonial-specific fields
+        if (contentType === 'testimonial') {
+            formData.append('clientName', document.getElementById('client-name').value);
+            formData.append('position', document.getElementById('position').value);
+            formData.append('rating', document.getElementById('rating').value);
+        }
 
         // append image file under field name 'image' (server expects this)
         formData.append('image', currentImageFile);
@@ -704,11 +936,12 @@ function addNewContent(contentType, data) {
         else if (contentType === 'client') headers['X-Category'] = 'clients';
         else if (contentType === 'team') headers['X-Category'] = 'team';
         else if (contentType === 'certificate') headers['X-Category'] = 'certificates';
+        else if (contentType === 'testimonial') headers['X-Category'] = 'testimonials';
         else if (contentType === 'job') headers['X-Category'] = 'jobs';
 
-        fetch(url, {
+        authorizedFetch(url, {
             method: 'POST',
-            headers,
+            headers: getAuthHeaders(headers),
             body: formData
         })
             .then(response => response.json())
@@ -720,6 +953,7 @@ function addNewContent(contentType, data) {
                     else if (contentType === 'job') loadContent('jobs');
                     else if (contentType === 'client') loadContent('clients');
                     else if (contentType === 'team') loadContent('team');
+                    else if (contentType === 'testimonial') loadContent('testimonials');
                     else loadContent('services');
                 } else {
                     alert(`Error adding ${itemName}: ${result.error || 'Unknown error'}`);
@@ -765,16 +999,21 @@ function addNewContent(contentType, data) {
             itemData.role = document.getElementById('role').value;
             itemData.bio = document.getElementById('bio').value;
             // Don't include description for team members since it's hidden
+        }
+        // Testimonial-specific fields
+        else if (currentContentType === 'testimonial') {
+            itemData.clientName = document.getElementById('client-name').value;
+            itemData.position = document.getElementById('position').value;
+            itemData.rating = parseInt(document.getElementById('rating').value) || 5;
+            // Don't include title or description for testimonials
         } else {
             // For other content types, use description
             itemData.description = document.getElementById('description').value;
         }
 
-        fetch(url, {
+        authorizedFetch(url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify(itemData)
         })
             .then(response => response.json())
@@ -786,6 +1025,7 @@ function addNewContent(contentType, data) {
                     else if (contentType === 'client') loadContent('clients');
                     else if (contentType === 'team') loadContent('team');
                     else if (contentType === 'certificate') loadContent('certificates');
+                    else if (contentType === 'testimonial') loadContent('testimonials');
                     else loadContent('services');
                 } else {
                     alert(`Error adding ${itemName}: ${result.error || 'Unknown error'}`);
@@ -800,6 +1040,7 @@ function addNewContent(contentType, data) {
 
 
 function updateContent(contentType, id, data) {
+    if (!ensureAuthenticated('Please log in to update content.')) return;
     let url, itemName;
 
     switch(contentType) {
@@ -827,10 +1068,14 @@ function updateContent(contentType, id, data) {
             url = `/api/certificates/${id}`;
             itemName = 'Certificate';
             break;
+        case 'testimonial':
+            url = `/api/testimonials/${id}`;
+            itemName = 'Testimonial';
+            break;
     }
 
     // If a new file was selected, send as multipart/form-data so the server can store the image
-    if (currentImageFile && (contentType === 'service' || contentType === 'gallery' || contentType === 'client' || contentType === 'team' || contentType === 'certificate')) {
+    if (currentImageFile && (contentType === 'service' || contentType === 'gallery' || contentType === 'client' || contentType === 'team' || contentType === 'certificate' || contentType === 'testimonial')) {
         const formData = new FormData();
         formData.append('title', data.title || '');
         formData.append('description', data.description || '');
@@ -877,6 +1122,12 @@ function updateContent(contentType, id, data) {
                 });
             }
         }
+        // Add testimonial-specific fields
+        if (contentType === 'testimonial') {
+            formData.append('clientName', document.getElementById('client-name').value);
+            formData.append('position', document.getElementById('position').value);
+            formData.append('rating', document.getElementById('rating').value);
+        }
         // for client/team we don't need category but ensure image appended
         formData.append('image', currentImageFile);
 
@@ -887,11 +1138,12 @@ function updateContent(contentType, id, data) {
         else if (contentType === 'client') headers['X-Category'] = 'clients';
         else if (contentType === 'team') headers['X-Category'] = 'team';
         else if (contentType === 'certificate') headers['X-Category'] = 'certificates';
+        else if (contentType === 'testimonial') headers['X-Category'] = 'testimonials';
         else if (contentType === 'job') headers['X-Category'] = 'jobs';
 
-        fetch(url, {
+        authorizedFetch(url, {
             method: 'PUT',
-            headers,
+            headers: getAuthHeaders(headers),
             body: formData
         })
             .then(response => response.json())
@@ -903,6 +1155,7 @@ function updateContent(contentType, id, data) {
                     else if (contentType === 'client') loadContent('clients');
                     else if (contentType === 'team') loadContent('team');
                     else if (contentType === 'certificate') loadContent('certificates');
+                    else if (contentType === 'testimonial') loadContent('testimonials');
                     else loadContent('services');
                 } else {
                     alert(`Error updating ${itemName}: ${result.error || 'Unknown error'}`);
@@ -947,16 +1200,21 @@ function updateContent(contentType, id, data) {
             itemData.role = document.getElementById('role').value;
             itemData.bio = document.getElementById('bio').value;
             // Don't include description for team members since it's hidden
+        }
+        // Testimonial-specific fields
+        else if (contentType === 'testimonial') {
+            itemData.clientName = document.getElementById('client-name').value;
+            itemData.position = document.getElementById('position').value;
+            itemData.rating = parseInt(document.getElementById('rating').value) || 5;
+            // Don't include title or description for testimonials
         } else {
             // For other content types, use description
             itemData.description = document.getElementById('description').value;
         }
 
-        fetch(url, {
+        authorizedFetch(url, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify(itemData)
         })
             .then(response => response.json())
@@ -968,6 +1226,7 @@ function updateContent(contentType, id, data) {
                     else if (contentType === 'client') loadContent('clients');
                     else if (contentType === 'team') loadContent('team');
                     else if (contentType === 'certificate') loadContent('certificates');
+                    else if (contentType === 'testimonial') loadContent('testimonials');
                     else loadContent('services');
                 } else {
                     alert(`Error updating ${itemName}: ${result.error || 'Unknown error'}`);
@@ -980,149 +1239,65 @@ function updateContent(contentType, id, data) {
     }
 }
 
-function deleteService(id) {
-    if (!confirm('Are you sure you want to delete this service?')) return;
+// Generic delete function for all content types
+function deleteContent(contentType, id) {
+    if (!ensureAuthenticated('Please log in to delete content.')) return;
+    const typeMap = {
+        service: { plural: 'services', loader: loadServices },
+        gallery: { plural: 'gallery', loader: loadGallery },
+        job: { plural: 'jobs', loader: loadJobs },
+        client: { plural: 'clients', loader: loadClients },
+        team: { plural: 'team', loader: loadTeam },
+        certificate: { plural: 'certificates', loader: loadCertificates },
+        testimonial: { plural: 'testimonials', loader: loadTestimonials }
+    };
 
-    fetch(`/api/services/${id}`, {
-        method: 'DELETE'
-    })
+    const config = typeMap[contentType];
+    if (!config) {
+        console.error('Unknown content type:', contentType);
+        return;
+    }
+
+    const itemName = contentType === 'gallery' ? 'gallery item' : 
+                     contentType === 'team' ? 'team member' : contentType;
+
+    if (!confirm(`Are you sure you want to delete this ${itemName}?`)) return;
+
+    authorizedFetch(`/api/${config.plural}/${id}`, { method: 'DELETE' })
         .then(response => response.json())
         .then(result => {
             if (result.success) {
-                alert('Service deleted successfully!');
-                loadServices();
+                alert(`${itemName.charAt(0).toUpperCase() + itemName.slice(1)} deleted successfully!`);
+                config.loader();
             } else {
-                alert(`Error deleting service: ${result.error || 'Unknown error'}`);
+                alert(`Error deleting ${itemName}: ${result.error || 'Unknown error'}`);
             }
         })
         .catch(error => {
-            console.error('Error deleting service:', error);
-            alert('Error deleting service');
+            console.error(`Error deleting ${contentType}:`, error);
+            alert(`Error deleting ${itemName}`);
         });
 }
 
-function deleteGalleryItem(id) {
-    if (!confirm('Are you sure you want to delete this gallery item?')) return;
-
-    fetch(`/api/gallery/${id}`, {
-        method: 'DELETE'
-    })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                alert('Gallery item deleted successfully!');
-                loadGallery();
-            } else {
-                alert(`Error deleting gallery item: ${result.error || 'Unknown error'}`);
-            }
-        })
-        .catch(error => {
-            console.error('Error deleting gallery item:', error);
-            alert('Error deleting gallery item');
-        });
-}
-
-function deleteJob(id) {
-    if (!confirm('Are you sure you want to delete this job?')) return;
-
-    fetch(`/api/jobs/${id}`, {
-        method: 'DELETE'
-    })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                alert('Job deleted successfully!');
-                loadJobs();
-            } else {
-                alert(`Error deleting job: ${result.error || 'Unknown error'}`);
-            }
-        })
-        .catch(error => {
-            console.error('Error deleting job:', error);
-            alert('Error deleting job');
-        });
-}
-
-function deleteClient(id) {
-    if (!confirm('Are you sure you want to delete this client?')) return;
-
-    fetch(`/api/clients/${id}`, {
-        method: 'DELETE'
-    })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                alert('Client deleted successfully!');
-                loadClients();
-            } else {
-                alert(`Error deleting client: ${result.error || 'Unknown error'}`);
-            }
-        })
-        .catch(error => {
-            console.error('Error deleting client:', error);
-            alert('Error deleting client');
-        });
-}
-
-function deleteTeamMember(id) {
-    if (!confirm('Are you sure you want to delete this team member?')) return;
-
-    fetch(`/api/team/${id}`, {
-        method: 'DELETE'
-    })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                alert('Team member deleted successfully!');
-                loadTeam();
-            } else {
-                alert(`Error deleting team member: ${result.error || 'Unknown error'}`);
-            }
-        })
-        .catch(error => {
-            console.error('Error deleting team member:', error);
-            alert('Error deleting team member');
-        });
-}
-
-function deleteCertificate(id) {
-    if (!confirm('Are you sure you want to delete this certificate?')) return;
-
-    fetch(`/api/certificates/${id}`, {
-        method: 'DELETE'
-    })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                alert('Certificate deleted successfully!');
-                loadCertificates();
-            } else {
-                alert(`Error deleting certificate: ${result.error || 'Unknown error'}`);
-            }
-        })
-        .catch(error => {
-            console.error('Error deleting certificate:', error);
-            alert('Error deleting certificate');
-        });
-}
+// Wrapper functions for backwards compatibility with HTML onclick attributes
+function deleteService(id) { deleteContent('service', id); }
+function deleteGalleryItem(id) { deleteContent('gallery', id); }
+function deleteJob(id) { deleteContent('job', id); }
+function deleteClient(id) { deleteContent('client', id); }
+function deleteTeamMember(id) { deleteContent('team', id); }
+function deleteCertificate(id) { deleteContent('certificate', id); }
+function deleteTestimonial(id) { deleteContent('testimonial', id); }
 
 function handleCompanyFormSubmit(e) {
     e.preventDefault();
+    if (!ensureAuthenticated('Please log in to update company info.')) return;
 
     const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData);
+    const companyData = Object.fromEntries(formData);
 
-    // Convert values string back to array
-    const companyData = {
-        ...data,
-        values: data.values ? data.values.split(',').map(v => v.trim()) : []
-    };
-
-    fetch('/api/company', {
+    authorizedFetch('/api/company', {
         method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(companyData)
     })
         .then(response => response.json())

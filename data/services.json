@@ -55,6 +55,13 @@
       "description": "Comprehensive energy assessments to optimize efficiency and reduce operational costs.",
       "image": "/images/services/1763298010654-769006194.jpg",
       "icon": "fas fa-chart-line"
+    },
+    {
+      "id": 9,
+      "title": "title",
+      "description": "desc",
+      "category": "services",
+      "image": "/images/services/1766693663770-435633643.png"
     }
   ]
 }
