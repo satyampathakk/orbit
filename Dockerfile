@@ -1,28 +1,27 @@
-# Dockerfile for Node.js Backend
-FROM node:18-alpine
+# Dockerfile for Node.js Backend - Ultra-minimal using distroless
+FROM node:18-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies and clean cache
+RUN npm ci --only=production && \
+    npm cache clean --force
 
-# Copy application files
+# Production stage - use distroless for minimal size
+FROM gcr.io/distroless/nodejs18-debian11
+
+WORKDIR /app
+
+# Copy only node_modules and application code from builder
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
 COPY server.js ./
-COPY data ./data
-COPY images ./images
 
-# Create uploads directory
-RUN mkdir -p uploads
-
-# Expose port
 EXPOSE 3000
 
-# Set environment variables
 ENV NODE_ENV=production
 
-# Start the server
-CMD ["node", "server.js"]
+# Start the server (distroless uses direct CMD, no shell)
+CMD ["server.js"]
