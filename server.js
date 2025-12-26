@@ -7,6 +7,8 @@ const crypto = require('crypto');
 const fs = require('fs').promises;
 const path = require('path');
 const fsSync = require('fs');
+const rateLimit = require('express-rate-limit');
+const EmailService = require('emailService');
 
 // ========== CONFIGURATION ==========
 const app = express();
@@ -15,6 +17,9 @@ const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change-me';
 const TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const DATA_DIR = path.join(__dirname, 'data');
+
+// Initialize email service
+const emailService = new EmailService();
 
 const REQUIRED_DIRS = [
     'data',
@@ -66,6 +71,34 @@ const DEFAULT_DATA = {
 // ========== MIDDLEWARE ==========
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+
+// ========== RATE LIMITING ==========
+// Rate limiting middleware for contact form endpoint
+const contactRateLimit = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour window
+    max: 5, // Maximum 5 requests per hour per IP
+    message: {
+        success: false,
+        error: 'Too many contact form submissions',
+        details: 'You have exceeded the maximum number of contact form submissions. Please wait 1 hour before submitting again.'
+    },
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    handler: (req, res) => {
+        console.log(`Rate limit exceeded for IP: ${req.ip}`);
+        res.status(429).json({
+            success: false,
+            error: 'Too many contact form submissions',
+            details: 'You have exceeded the maximum number of contact form submissions. Please wait 1 hour before submitting again.'
+        });
+    },
+    skip: (req, res) => {
+        // Skip rate limiting for localhost during development (comment out for testing)
+        // const ip = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
+        // return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
+        return false; // Enable rate limiting for all IPs during testing
+    }
+});
 
 // ========== FILE UPLOAD CONFIGURATION ==========
 const storage = multer.diskStorage({
@@ -479,14 +512,225 @@ app.put('/api/company', requireAuth, async (req, res) => {
     }
 });
 
+// ========== CONTACT FORM API ==========
+
+// Input validation functions
+function validateContactForm(data) {
+    const errors = [];
+    
+    // Name validation
+    if (!data.name || typeof data.name !== 'string') {
+        errors.push('Name is required');
+    } else if (data.name.trim().length < 2) {
+        errors.push('Name must be at least 2 characters long');
+    } else if (data.name.trim().length > 100) {
+        errors.push('Name must be less than 100 characters');
+    } else if (containsSuspiciousContent(data.name)) {
+        errors.push('Name contains invalid characters');
+    }
+    
+    // Email validation
+    if (!data.email || typeof data.email !== 'string') {
+        errors.push('Email is required');
+    } else {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(data.email.trim())) {
+            errors.push('Please provide a valid email address');
+        }
+    }
+    
+    // Phone validation
+    if (!data.phone || typeof data.phone !== 'string') {
+        errors.push('Phone number is required');
+    } else if (data.phone.trim().length < 10) {
+        errors.push('Phone number must be at least 10 characters long');
+    } else if (data.phone.trim().length > 15) {
+        errors.push('Phone number must be less than 15 characters');
+    }
+    
+    // Message validation
+    if (!data.message || typeof data.message !== 'string') {
+        errors.push('Message is required');
+    } else if (data.message.trim().length < 10) {
+        errors.push('Message must be at least 10 characters long');
+    } else if (data.message.trim().length > 1000) {
+        errors.push('Message must be less than 1000 characters');
+    } else if (containsSuspiciousContent(data.message)) {
+        errors.push('Message contains invalid content');
+    }
+    
+    return errors;
+}
+
+// Check for suspicious content (XSS, SQL injection, etc.)
+function containsSuspiciousContent(str) {
+    if (typeof str !== 'string') return false;
+    
+    const suspiciousPatterns = [
+        /<script/i,
+        /javascript:/i,
+        /on\w+\s*=/i,
+        /drop\s+table/i,
+        /select\s+\*/i,
+        /union\s+select/i,
+        /insert\s+into/i,
+        /delete\s+from/i,
+        /update\s+\w+\s+set/i,
+        /<iframe/i,
+        /<object/i,
+        /<embed/i,
+        /eval\s*\(/i,
+        /expression\s*\(/i
+    ];
+    
+    return suspiciousPatterns.some(pattern => pattern.test(str));
+}
+
+// Input sanitization function
+function sanitizeInput(str) {
+    if (typeof str !== 'string') return str;
+    return str
+        .trim()
+        .replace(/[<>]/g, '') // Remove potential HTML tags
+        .replace(/javascript:/gi, '') // Remove javascript: protocol
+        .replace(/on\w+=/gi, ''); // Remove event handlers
+}
+
+// Contact form endpoint with rate limiting
+app.post('/api/contact', contactRateLimit, async (req, res) => {
+    try {
+        // Validate request body
+        const validationErrors = validateContactForm(req.body);
+        if (validationErrors.length > 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Validation failed',
+                details: validationErrors.join(', ')
+            });
+        }
+        
+        // Sanitize input data
+        const sanitizedData = {
+            name: sanitizeInput(req.body.name),
+            email: sanitizeInput(req.body.email),
+            phone: sanitizeInput(req.body.phone),
+            message: sanitizeInput(req.body.message)
+        };
+        
+        // Log the contact form submission
+        console.log('Contact form submission received:', {
+            name: sanitizedData.name,
+            email: sanitizedData.email,
+            phone: sanitizedData.phone,
+            timestamp: new Date().toISOString()
+        });
+        
+        // Send emails using email service
+        try {
+            if (!emailService.isReady()) {
+                console.log('Email service not ready, attempting to initialize...');
+                const initialized = await emailService.initializeTransporter();
+                if (!initialized) {
+                    throw new Error('Failed to initialize email service');
+                }
+            }
+            
+            // Prepare metadata for email template
+            const metadata = {
+                clientIP: req.ip || req.connection.remoteAddress || 'Unknown',
+                userAgent: req.get('User-Agent') || 'Unknown'
+            };
+            
+            const emailResult = await emailService.sendContactEmail(sanitizedData, metadata);
+            
+            // Check if at least one email was sent successfully
+            const userEmailSent = emailResult.userEmail.success;
+            const businessEmailSent = emailResult.businessEmail.success;
+            
+            if (!userEmailSent && !businessEmailSent) {
+                // Both emails failed
+                console.error('Both emails failed to send:', {
+                    userError: emailResult.userEmail.error,
+                    businessError: emailResult.businessEmail.error
+                });
+                
+                return res.status(500).json({
+                    success: false,
+                    error: 'Email delivery failed',
+                    details: 'Unable to send confirmation emails. Please try again or contact us directly.'
+                });
+            }
+            
+            // At least one email was sent successfully
+            let message = 'Contact form submitted successfully';
+            let warnings = [];
+            
+            if (!userEmailSent) {
+                warnings.push('Confirmation email could not be sent');
+                console.warn('User confirmation email failed:', emailResult.userEmail.error);
+            }
+            
+            if (!businessEmailSent) {
+                warnings.push('Business notification could not be sent');
+                console.warn('Business notification email failed:', emailResult.businessEmail.error);
+            }
+            
+            if (warnings.length > 0) {
+                message += '. Note: ' + warnings.join(', ');
+            }
+            
+            res.json({
+                success: true,
+                message: message,
+                emailStatus: {
+                    userEmail: userEmailSent,
+                    businessEmail: businessEmailSent
+                }
+            });
+            
+        } catch (emailError) {
+            console.error('Email service error:', emailError);
+            
+            // Return success for form submission but indicate email issue
+            res.json({
+                success: true,
+                message: 'Contact form submitted successfully, but confirmation email could not be sent. We will still respond to your inquiry.',
+                emailStatus: {
+                    userEmail: false,
+                    businessEmail: false,
+                    error: 'Email service temporarily unavailable'
+                }
+            });
+        }
+        
+    } catch (error) {
+        console.error('Error processing contact form:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error',
+            details: 'Failed to process contact form submission'
+        });
+    }
+});
+
 // Static files
 app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use(express.static(path.join(__dirname, '.')));
 
 // ========== SERVER STARTUP ==========
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`\n🚀 Orbit Power Server running on http://localhost:${PORT}\n`);
-    console.log('📡 Available API Endpoints:');
+    
+    // Initialize email service
+    console.log('📧 Initializing email service...');
+    const emailInitialized = await emailService.initializeTransporter();
+    if (emailInitialized) {
+        console.log('✅ Email service ready');
+    } else {
+        console.log('⚠️  Email service initialization failed - contact form will work but emails may not be sent');
+    }
+    
+    console.log('\n📡 Available API Endpoints:');
     console.log('   Services:      GET/POST/PUT/DELETE /api/services');
     console.log('   Gallery:       GET/POST/PUT/DELETE /api/gallery');
     console.log('   Jobs:          GET/POST/PUT/DELETE /api/jobs');
@@ -495,5 +739,6 @@ app.listen(PORT, () => {
     console.log('   Certificates:  GET/POST/PUT/DELETE /api/certificates');
     console.log('   Testimonials:  GET/POST/PUT/DELETE /api/testimonials');
     console.log('   Company:       GET/PUT /api/company');
+    console.log('   Contact:       POST /api/contact');
     console.log('   Auth:          POST /api/auth/login, POST /api/auth/logout, GET /api/auth/status\n');
 });
