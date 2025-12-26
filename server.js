@@ -69,6 +69,10 @@ const DEFAULT_DATA = {
 };
 
 // ========== MIDDLEWARE ==========
+// Trust proxy for rate limiting behind reverse proxy (Nginx)
+// Only trust the first proxy (nginx container)
+app.set('trust proxy', 1);
+
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
@@ -93,10 +97,9 @@ const contactRateLimit = rateLimit({
         });
     },
     skip: (req, res) => {
-        // Skip rate limiting for localhost during development (comment out for testing)
-        const ip = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
-        return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
-        // return false; // Enable rate limiting for all IPs during testing
+        // For production, enable rate limiting for all IPs
+        // Only skip for internal health checks or specific development scenarios
+        return false;
     }
 });
 
