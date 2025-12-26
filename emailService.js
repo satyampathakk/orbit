@@ -288,7 +288,7 @@ class EmailService {
     
     try {
       // Read the HTML template file
-      const templatePath = path.join(__dirname, '..', 'templates', 'businessNotification.html');
+      const templatePath = path.join(__dirname, 'templates', 'businessNotification.html');
       let html = await fs.readFile(templatePath, 'utf8');
       
       // Replace placeholders with actual data

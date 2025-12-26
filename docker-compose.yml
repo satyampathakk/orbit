@@ -15,6 +15,16 @@ services:
       - PORT=3000
       - ADMIN_USER=${ADMIN_USER:-admin}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - AUTH_SECRET=${AUTH_SECRET:-some-long-random-string}
+      # Email Service Configuration
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_SECURE=${SMTP_SECURE:-false}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - BUSINESS_EMAIL=${BUSINESS_EMAIL}
+      - FROM_EMAIL=${FROM_EMAIL}
+      - FROM_NAME=${FROM_NAME:-Orbit Power}
     volumes:
       # Persist data and uploads
       - ./data:/app/data
@@ -23,7 +33,7 @@ services:
     networks:
       - orbit-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/services"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/company', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3

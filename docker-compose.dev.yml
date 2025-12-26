@@ -15,9 +15,21 @@ services:
       - PORT=3000
       - ADMIN_USER=${ADMIN_USER:-admin}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - AUTH_SECRET=${AUTH_SECRET:-some-long-random-string}
+      # Email Service Configuration
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_SECURE=${SMTP_SECURE:-false}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - BUSINESS_EMAIL=${BUSINESS_EMAIL}
+      - FROM_EMAIL=${FROM_EMAIL}
+      - FROM_NAME=${FROM_NAME:-Orbit Power}
     volumes:
       # Mount source code for hot reload
       - ./server.js:/app/server.js
+      - ./emailService.js:/app/emailService.js
+      - ./templates:/app/templates
       - ./data:/app/data
       - ./images:/app/images
       - ./uploads:/app/uploads

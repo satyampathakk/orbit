@@ -35,7 +35,23 @@ build
 # Docker files (not needed in image)
 Dockerfile
 docker-compose.yml
+docker-compose.dev.yml
 .dockerignore
+docker-start.bat
+docker-start.sh
+
+# Test files
+test-*.js
+test-*.html
+tester.js
+*.test.js
+__tests__
+
+# Development files
+DEVELOPER_GUIDE.md
+DOCKER_GUIDE.md
+DOCKER_QUICKSTART.md
+project_structure.txt
 
 # Uploads (will be mounted as volume)
 uploads/*

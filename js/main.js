@@ -396,33 +396,76 @@ function initializeFormHandler() {
     const form = document.getElementById('enquiry-form');
     if (!form) return;
     
-    form.onsubmit = function(e) {
+    form.onsubmit = async function(e) {
         e.preventDefault();
         
         const formData = {
-            name: document.getElementById('name').value,
-            email: document.getElementById('email').value,
-            phone: document.getElementById('phone').value,
-            message: document.getElementById('message').value
+            name: document.getElementById('name').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            phone: document.getElementById('phone').value.trim(),
+            message: document.getElementById('message').value.trim()
         };
         
         // Validate all fields are filled
-        if (!Object.values(formData).every(val => val.trim())) {
-            alert('Please fill in all required fields.');
+        if (!Object.values(formData).every(val => val)) {
+            showFormMessage('Please fill in all required fields.', 'error');
             return;
         }
         
-        // Show success message
-        const messageDiv = document.getElementById('form-submitted-message');
-        if (messageDiv) {
-            messageDiv.textContent = "Thanks — we'll contact you shortly.";
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+            showFormMessage('Please enter a valid email address.', 'error');
+            return;
         }
         
-        form.reset();
+        // Show loading state
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Sending...';
+        submitBtn.disabled = true;
         
-        // Clear message after 4 seconds
-        setTimeout(() => {
-            if (messageDiv) messageDiv.textContent = "";
-        }, 4000);
+        try {
+            // Submit to API
+            const response = await fetch('/api/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                showFormMessage('Thank you! Your message has been sent successfully. We\'ll contact you shortly.', 'success');
+                form.reset();
+            } else {
+                showFormMessage(result.message || 'Failed to send message. Please try again.', 'error');
+            }
+        } catch (error) {
+            console.error('Contact form error:', error);
+            showFormMessage('Network error. Please check your connection and try again.', 'error');
+        } finally {
+            // Reset button state
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }
     };
+}
+
+// Helper function to show form messages
+function showFormMessage(message, type = 'info') {
+    const messageDiv = document.getElementById('form-submitted-message');
+    if (!messageDiv) return;
+    
+    // Set message and styling
+    messageDiv.textContent = message;
+    messageDiv.className = `form-message ${type}`;
+    
+    // Clear message after 5 seconds
+    setTimeout(() => {
+        messageDiv.textContent = '';
+        messageDiv.className = 'form-message';
+    }, 5000);
 }

@@ -8,7 +8,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const fsSync = require('fs');
 const rateLimit = require('express-rate-limit');
-const EmailService = require('emailService');
+const EmailService = require('./emailService');
 
 // ========== CONFIGURATION ==========
 const app = express();
@@ -94,9 +94,9 @@ const contactRateLimit = rateLimit({
     },
     skip: (req, res) => {
         // Skip rate limiting for localhost during development (comment out for testing)
-        // const ip = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
-        // return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
-        return false; // Enable rate limiting for all IPs during testing
+        const ip = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
+        return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
+        // return false; // Enable rate limiting for all IPs during testing
     }
 });
 
